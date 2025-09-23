@@ -295,36 +295,6 @@ export MAVEN_OPTS="-Xmx1024m"
 mvn spring-boot:run
 ```
 
-## 📄 Licencia
-
-Este proyecto es de código abierto y está disponible bajo la [Licencia MIT](LICENSE).
-
-## 👥 Contribuciones
-
-Las contribuciones son bienvenidas. Por favor:
-
-1. Fork el proyecto
-2. Crea una rama para tu funcionalidad (`git checkout -b feature/nueva-funcionalidad`)
-3. Commit tus cambios (`git commit -am 'Agregar nueva funcionalidad'`)
-4. Push a la rama (`git push origin feature/nueva-funcionalidad`)
-5. Abre un Pull Request
-
-## 📞 Soporte
-
-Si tienes preguntas o necesitas ayuda:
-
--   Crea un issue en [GitHub](https://github.com/Jecsonrv/gastos-personales-app/issues)
--   Revisa la documentación
--   Consulta los logs de la aplicación
-
-## 🔗 Enlaces
-
--   **Repositorio GitHub**: [https://github.com/Jecsonrv/gastos-personales-app](https://github.com/Jecsonrv/gastos-personales-app)
--   **Documentación**: [README.md](https://github.com/Jecsonrv/gastos-personales-app/blob/main/README.md)
--   **Issues y Bugs**: [GitHub Issues](https://github.com/Jecsonrv/gastos-personales-app/issues)
-
----
-
 **Desarrollado con ❤️ usando Java y Spring Boot**  
 **Autor**: [Jecsonrv](https://github.com/Jecsonrv)  
 **Repositorio**: [gastos-personales-app](https://github.com/Jecsonrv/gastos-personales-app)
