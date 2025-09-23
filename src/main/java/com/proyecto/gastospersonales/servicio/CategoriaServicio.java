@@ -8,6 +8,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 /**
  * Servicio que maneja la lógica de negocio para las categorías
@@ -49,7 +50,7 @@ public class CategoriaServicio {
      */
     @Transactional(readOnly = true)
     public List<Categoria> obtenerCategoriasPredefinidas() {
-        return categoriaRepositorio.findByEsPredefinidalOrderByNombre(true);
+        return categoriaRepositorio.findByEsPredefinidaOrderByNombre(true);
     }
     
     /**
@@ -57,7 +58,7 @@ public class CategoriaServicio {
      */
     @Transactional(readOnly = true)
     public List<Categoria> obtenerCategoriasPersonalizadas() {
-        return categoriaRepositorio.findByEsPredefinidalOrderByNombre(false);
+        return categoriaRepositorio.findByEsPredefinidaOrderByNombre(false);
     }
     
     /**
@@ -176,17 +177,27 @@ public class CategoriaServicio {
      */
     public void inicializarCategoriasPredefinidas() {
         String[] categoriasPredefinidas = {
-                "Alimentación", "Transporte", "Entretenimiento", 
-                "Salud", "Educación", "Otros"
+                "Alimentacion", "Transporte", "Entretenimiento", 
+                "Salud", "Educacion", "Servicios", "Ropa", 
+                "Hogar", "Tecnologia", "Otros", "Salario",
+                "Inversiones", "Negocios", "Otros Ingresos"
         };
         
         String[] descripcionesPredefinidas = {
                 "Gastos relacionados con comida y bebida",
-                "Gastos de movilización y transporte",
-                "Gastos de ocio, entretenimiento y diversión",
-                "Gastos médicos y de salud",
-                "Gastos educativos y de formación",
-                "Otros gastos no categorizados"
+                "Gastos de movilizacion y transporte",
+                "Gastos de ocio, entretenimiento y diversion",
+                "Gastos medicos y de salud",
+                "Gastos educativos y de formacion",
+                "Servicios basicos como luz, agua, internet",
+                "Gastos en vestimenta y calzado",
+                "Gastos del hogar y decoracion",
+                "Gastos en dispositivos y software",
+                "Otros gastos no categorizados",
+                "Ingresos por trabajo",
+                "Ingresos por inversiones",
+                "Ingresos por actividades comerciales",
+                "Otros tipos de ingresos"
         };
         
         for (int i = 0; i < categoriasPredefinidas.length; i++) {
@@ -199,5 +210,43 @@ public class CategoriaServicio {
                 categoriaRepositorio.save(categoria);
             }
         }
+    }
+    
+    /**
+     * Obtiene categorías apropiadas para gastos
+     */
+    @Transactional(readOnly = true)
+    public List<Categoria> obtenerCategoriasParaGastos() {
+        List<Categoria> todasCategorias = obtenerTodasLasCategorias();
+        return todasCategorias.stream()
+                .filter(categoria -> !esCategoriaDeTipoIngreso(categoria.getNombre()))
+                .collect(Collectors.toList());
+    }
+    
+    /**
+     * Obtiene categorías apropiadas para ingresos
+     */
+    @Transactional(readOnly = true)
+    public List<Categoria> obtenerCategoriasParaIngresos() {
+        List<Categoria> todasCategorias = obtenerTodasLasCategorias();
+        return todasCategorias.stream()
+                .filter(categoria -> esCategoriaDeTipoIngreso(categoria.getNombre()))
+                .collect(Collectors.toList());
+    }
+    
+    /**
+     * Determina si una categoría es típicamente para ingresos
+     */
+    private boolean esCategoriaDeTipoIngreso(String nombreCategoria) {
+        String[] categoriasIngreso = {
+            "Salario", "Inversiones", "Negocios", "Otros Ingresos", "Regalos"
+        };
+        
+        for (String categoria : categoriasIngreso) {
+            if (categoria.equalsIgnoreCase(nombreCategoria)) {
+                return true;
+            }
+        }
+        return false;
     }
 }

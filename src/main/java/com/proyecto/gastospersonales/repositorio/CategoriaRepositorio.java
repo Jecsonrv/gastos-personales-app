@@ -2,6 +2,7 @@ package com.proyecto.gastospersonales.repositorio;
 
 import com.proyecto.gastospersonales.modelo.Categoria;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -29,7 +30,7 @@ public interface CategoriaRepositorio extends JpaRepository<Categoria, Long> {
     /**
      * Obtiene todas las categorías predefinidas del sistema
      */
-    List<Categoria> findByEsPredefinidalOrderByNombre(Boolean esPredefinida);
+    List<Categoria> findByEsPredefinidaOrderByNombre(Boolean esPredefinida);
     
     /**
      * Obtiene todas las categorías ordenadas por nombre
@@ -40,6 +41,18 @@ public interface CategoriaRepositorio extends JpaRepository<Categoria, Long> {
      * Busca categorías que contengan el texto en el nombre
      */
     List<Categoria> findByNombreContainingIgnoreCaseOrderByNombre(String texto);
+    
+    /**
+     * Elimina categorías que contengan el texto especificado en el nombre
+     */
+    @Modifying
+    @Query("DELETE FROM Categoria c WHERE c.nombre LIKE %?1%")
+    void deleteByNombreContaining(String texto);
+    
+    /**
+     * Encuentra categorías por nombre exacto
+     */
+    List<Categoria> findByNombre(String nombre);
     
     /**
      * Obtiene categorías que no tienen movimientos asociados
@@ -66,4 +79,11 @@ public interface CategoriaRepositorio extends JpaRepository<Categoria, Long> {
            "FROM Categoria c " +
            "ORDER BY cantidadMovimientos DESC, c.nombre ASC")
     List<Object[]> findCategoriasConCantidadMovimientos();
+    
+    /**
+     * Elimina categorías con nombres que contengan caracteres problemáticos usando SQL nativo
+     */
+    @Modifying
+    @Query(value = "DELETE FROM categoria WHERE nombre LIKE '%??%' OR nombre LIKE '%ó%' OR nombre LIKE '%á%' OR nombre LIKE '%í%'", nativeQuery = true)
+    void eliminarCategoriasConCaracteresProblematicos();
 }

@@ -67,14 +67,14 @@ public class MenuPrincipal {
         System.out.println("2. Registrar Ingreso");
         System.out.println("3. Ver Balance Actual");
         System.out.println("4. Listar Todos los Movimientos");
-        System.out.println("5. Ver Movimientos por Categoría");
+        System.out.println("5. Ver Movimientos por Categoria");
         System.out.println("6. Generar Reporte Mensual");
-        System.out.println("7. Gestionar Categorías");
+        System.out.println("7. Gestionar Categorias");
         System.out.println("8. Buscar Movimientos");
-        System.out.println("9. Estadísticas");
+        System.out.println("9. Estadisticas");
         System.out.println("0. Salir");
         System.out.println("======================================");
-        System.out.print("Seleccione una opción: ");
+        System.out.print("Seleccione una opcion: ");
     }
     
     private int leerOpcion() {
@@ -99,7 +99,7 @@ public class MenuPrincipal {
                 case 9 -> mostrarEstadisticas();
                 case 0 -> System.out.println("Saliendo del sistema...");
                 default -> {
-                    System.out.println("❌ Opción no válida. Por favor, seleccione una opción del 0 al 9.");
+                    System.out.println("Opcion no valida. Por favor, seleccione una opcion del 0 al 9.");
                     pausar();
                 }
             }
@@ -113,7 +113,7 @@ public class MenuPrincipal {
         limpiarPantalla();
         System.out.println("=== REGISTRAR NUEVO GASTO ===");
         
-        System.out.print("Descripción: ");
+        System.out.print("Descripcion: ");
         String descripcion = scanner.nextLine().trim();
         
         System.out.print("Monto: $");
@@ -126,12 +126,12 @@ public class MenuPrincipal {
             return;
         }
         
-        // Mostrar categorías disponibles
-        List<Categoria> categorias = categoriaServicio.obtenerTodasLasCategorias();
+        // Mostrar categorías disponibles para gastos
+        List<Categoria> categorias = categoriaServicio.obtenerCategoriasParaGastos();
         if (categorias.isEmpty()) {
             System.out.println("❌ No hay categorías disponibles. Creando categorías predefinidas...");
             categoriaServicio.inicializarCategoriasPredefinidas();
-            categorias = categoriaServicio.obtenerTodasLasCategorias();
+            categorias = categoriaServicio.obtenerCategoriasParaGastos();
         }
         
         System.out.println("\nCategorías disponibles:");
@@ -139,7 +139,7 @@ public class MenuPrincipal {
             System.out.printf("%d. %s\n", i + 1, categorias.get(i).getNombre());
         }
         
-        System.out.print("Seleccione categoría: ");
+        System.out.print("Seleccione categoria: ");
         int opcionCategoria;
         try {
             opcionCategoria = Integer.parseInt(scanner.nextLine().trim());
@@ -187,8 +187,8 @@ public class MenuPrincipal {
             return;
         }
         
-        // Para ingresos, usar categoría "Otros" por defecto o permitir selección
-        List<Categoria> categorias = categoriaServicio.obtenerTodasLasCategorias();
+        // Para ingresos, mostrar solo categorías apropiadas para ingresos
+        List<Categoria> categorias = categoriaServicio.obtenerCategoriasParaIngresos();
         System.out.println("\nCategorías disponibles:");
         for (int i = 0; i < categorias.size(); i++) {
             System.out.printf("%d. %s\n", i + 1, categorias.get(i).getNombre());
@@ -286,13 +286,13 @@ public class MenuPrincipal {
                 System.out.println("─".repeat(95));
                 
                 for (Movimiento movimiento : movimientos) {
-                    String tipoIcon = movimiento.getTipo() == TipoMovimiento.INGRESO ? "⬆️" : "⬇️";
+                    String tipoTexto = movimiento.getTipo() == TipoMovimiento.INGRESO ? "Ingreso" : "Gasto";
                     System.out.printf("%-3d %-19s %-30s %-12s %-10s %-15s\n",
                             movimiento.getId(),
                             movimiento.getFechaFormateada(),
                             truncar(movimiento.getDescripcion(), 28),
                             movimiento.getMontoFormateado(),
-                            tipoIcon + movimiento.getTipo(),
+                            tipoTexto,
                             truncar(movimiento.getCategoria().getNombre(), 13));
                 }
                 
@@ -372,12 +372,12 @@ public class MenuPrincipal {
         int opcion;
         do {
             limpiarPantalla();
-            System.out.println("=== GESTIÓN DE CATEGORÍAS ===");
-            System.out.println("1. Ver todas las categorías");
-            System.out.println("2. Crear nueva categoría");
-            System.out.println("3. Buscar categoría");
-            System.out.println("0. Volver al menú principal");
-            System.out.print("Seleccione una opción: ");
+            System.out.println("=== GESTION DE CATEGORIAS ===");
+            System.out.println("1. Ver todas las categorias");
+            System.out.println("2. Crear nueva categoria");
+            System.out.println("3. Buscar categoria");
+            System.out.println("0. Volver al menu principal");
+            System.out.print("Seleccione una opcion: ");
             
             opcion = leerOpcion();
             
@@ -387,7 +387,7 @@ public class MenuPrincipal {
                 case 3 -> buscarCategoria();
                 case 0 -> { /* Volver */ }
                 default -> {
-                    System.out.println("❌ Opción no válida.");
+                    System.out.println("Opcion no valida.");
                     pausar();
                 }
             }
@@ -508,7 +508,7 @@ public class MenuPrincipal {
     
     private void mostrarEstadisticas() {
         limpiarPantalla();
-        System.out.println("=== ESTADÍSTICAS FINANCIERAS ===");
+        System.out.println("=== ESTADISTICAS FINANCIERAS ===");
         
         try {
             Map<String, Object> estadisticas = movimientoServicio.obtenerEstadisticas();
@@ -518,7 +518,7 @@ public class MenuPrincipal {
             System.out.printf("Total Gastos:       $%.2f\n", (BigDecimal) estadisticas.get("totalGastos"));
             System.out.printf("Balance Total:      $%.2f\n", (BigDecimal) estadisticas.get("balanceTotal"));
             
-            System.out.println("\nESTADÍSTICAS DEL MES:");
+            System.out.println("\nESTADISTICAS DEL MES:");
             System.out.printf("Ingresos del mes:   $%.2f\n", (BigDecimal) estadisticas.get("ingresosDelMes"));
             System.out.printf("Gastos del mes:     $%.2f\n", (BigDecimal) estadisticas.get("gastosDelMes"));
             System.out.printf("Balance del mes:    $%.2f\n", (BigDecimal) estadisticas.get("balanceDelMes"));
@@ -536,7 +536,7 @@ public class MenuPrincipal {
             System.out.printf("Total ingresos:     %d\n", (Long) estadisticas.get("cantidadIngresos"));
             
         } catch (Exception e) {
-            System.out.println("❌ Error al obtener estadísticas: " + e.getMessage());
+            System.out.println("Error al obtener estadisticas: " + e.getMessage());
         }
         
         pausar();

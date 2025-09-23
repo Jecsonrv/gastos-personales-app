@@ -1,49 +1,61 @@
 -- Script de inicialización de datos para el Gestor de Compras Personales
 -- Se ejecuta automáticamente al iniciar la aplicación
+-- Usando caracteres sin acentos para evitar problemas de codificación
 
 -- Insertar categorías predefinidas si no existen
 INSERT INTO categoria (nombre, descripcion, es_predefinida) 
-SELECT 'Alimentación', 'Gastos relacionados con comida y bebida', true
-WHERE NOT EXISTS (SELECT 1 FROM categoria WHERE nombre = 'Alimentación');
+SELECT 'Alimentacion', 'Gastos relacionados con comida y bebida', true
+WHERE NOT EXISTS (SELECT 1 FROM categoria WHERE nombre = 'Alimentacion');
 
 INSERT INTO categoria (nombre, descripcion, es_predefinida) 
-SELECT 'Transporte', 'Gastos de movilización y transporte', true
+SELECT 'Transporte', 'Gastos de movilizacion y transporte', true
 WHERE NOT EXISTS (SELECT 1 FROM categoria WHERE nombre = 'Transporte');
 
 INSERT INTO categoria (nombre, descripcion, es_predefinida) 
-SELECT 'Entretenimiento', 'Gastos de ocio, entretenimiento y diversión', true
+SELECT 'Entretenimiento', 'Gastos de ocio, entretenimiento y diversion', true
 WHERE NOT EXISTS (SELECT 1 FROM categoria WHERE nombre = 'Entretenimiento');
 
 INSERT INTO categoria (nombre, descripcion, es_predefinida) 
-SELECT 'Salud', 'Gastos médicos y de salud', true
+SELECT 'Salud', 'Gastos medicos y de salud', true
 WHERE NOT EXISTS (SELECT 1 FROM categoria WHERE nombre = 'Salud');
 
 INSERT INTO categoria (nombre, descripcion, es_predefinida) 
-SELECT 'Educación', 'Gastos educativos y de formación', true
-WHERE NOT EXISTS (SELECT 1 FROM categoria WHERE nombre = 'Educación');
+SELECT 'Educacion', 'Gastos educativos y de formacion', true
+WHERE NOT EXISTS (SELECT 1 FROM categoria WHERE nombre = 'Educacion');
+
+INSERT INTO categoria (nombre, descripcion, es_predefinida) 
+SELECT 'Servicios', 'Servicios basicos como luz, agua, internet', true
+WHERE NOT EXISTS (SELECT 1 FROM categoria WHERE nombre = 'Servicios');
+
+INSERT INTO categoria (nombre, descripcion, es_predefinida) 
+SELECT 'Ropa', 'Gastos en vestimenta y calzado', true
+WHERE NOT EXISTS (SELECT 1 FROM categoria WHERE nombre = 'Ropa');
+
+INSERT INTO categoria (nombre, descripcion, es_predefinida) 
+SELECT 'Hogar', 'Gastos del hogar y decoracion', true
+WHERE NOT EXISTS (SELECT 1 FROM categoria WHERE nombre = 'Hogar');
+
+INSERT INTO categoria (nombre, descripcion, es_predefinida) 
+SELECT 'Tecnologia', 'Gastos en dispositivos y software', true
+WHERE NOT EXISTS (SELECT 1 FROM categoria WHERE nombre = 'Tecnologia');
 
 INSERT INTO categoria (nombre, descripcion, es_predefinida) 
 SELECT 'Otros', 'Otros gastos no categorizados', true
 WHERE NOT EXISTS (SELECT 1 FROM categoria WHERE nombre = 'Otros');
 
--- Comentario: Los datos de ejemplo se pueden agregar aquí si se desea
--- Pero es mejor que el usuario ingrese sus propios datos
+-- Categorias para ingresos
+INSERT INTO categoria (nombre, descripcion, es_predefinida) 
+SELECT 'Salario', 'Ingresos por trabajo', true
+WHERE NOT EXISTS (SELECT 1 FROM categoria WHERE nombre = 'Salario');
 
--- Ejemplo de datos de prueba (comentados por defecto)
-/*
--- Ejemplo de movimientos para testing (descomentar si se desea)
-INSERT INTO movimiento (descripcion, monto, fecha, tipo, categoria_id)
-SELECT 'Salario mensual', 2500.00, CURRENT_TIMESTAMP, 'INGRESO', 
-       (SELECT id FROM categoria WHERE nombre = 'Otros' LIMIT 1)
-WHERE NOT EXISTS (SELECT 1 FROM movimiento WHERE descripcion = 'Salario mensual');
+INSERT INTO categoria (nombre, descripcion, es_predefinida) 
+SELECT 'Inversiones', 'Ingresos por inversiones', true
+WHERE NOT EXISTS (SELECT 1 FROM categoria WHERE nombre = 'Inversiones');
 
-INSERT INTO movimiento (descripcion, monto, fecha, tipo, categoria_id)
-SELECT 'Almuerzo restaurante', 15.50, CURRENT_TIMESTAMP, 'GASTO', 
-       (SELECT id FROM categoria WHERE nombre = 'Alimentación' LIMIT 1)
-WHERE NOT EXISTS (SELECT 1 FROM movimiento WHERE descripcion = 'Almuerzo restaurante');
+INSERT INTO categoria (nombre, descripcion, es_predefinida) 
+SELECT 'Negocios', 'Ingresos por actividades comerciales', true
+WHERE NOT EXISTS (SELECT 1 FROM categoria WHERE nombre = 'Negocios');
 
-INSERT INTO movimiento (descripcion, monto, fecha, tipo, categoria_id)
-SELECT 'Pasaje bus', 0.30, CURRENT_TIMESTAMP, 'GASTO', 
-       (SELECT id FROM categoria WHERE nombre = 'Transporte' LIMIT 1)
-WHERE NOT EXISTS (SELECT 1 FROM movimiento WHERE descripcion = 'Pasaje bus');
-*/
+INSERT INTO categoria (nombre, descripcion, es_predefinida) 
+SELECT 'Otros Ingresos', 'Otros tipos de ingresos', true
+WHERE NOT EXISTS (SELECT 1 FROM categoria WHERE nombre = 'Otros Ingresos');

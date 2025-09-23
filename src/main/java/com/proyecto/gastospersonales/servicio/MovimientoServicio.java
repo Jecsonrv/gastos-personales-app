@@ -251,7 +251,7 @@ public class MovimientoServicio {
     public String generarReporteMensual() {
         StringBuilder reporte = new StringBuilder();
         LocalDate fechaActual = LocalDate.now();
-        String mesAnio = fechaActual.getMonth().getDisplayName(TextStyle.FULL, Locale.of("es")) + " " + fechaActual.getYear();
+        String mesAnio = fechaActual.getMonth().getDisplayName(TextStyle.FULL, Locale.forLanguageTag("es")) + " " + fechaActual.getYear();
         
         reporte.append("======= REPORTE ").append(mesAnio.toUpperCase()).append(" =======\n");
         

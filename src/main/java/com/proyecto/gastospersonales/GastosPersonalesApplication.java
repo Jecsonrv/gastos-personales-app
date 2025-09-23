@@ -30,6 +30,9 @@ public class GastosPersonalesApplication implements CommandLineRunner {
     private static ConfigurableApplicationContext context;
 
     public static void main(String[] args) {
+        // Configurar codificación UTF-8 para la consola
+        System.setProperty("file.encoding", "UTF-8");
+        System.setProperty("console.encoding", "UTF-8");
         System.setProperty("java.awt.headless", "false");
         
         // Verificar si se debe ejecutar en modo web
@@ -76,6 +79,12 @@ public class GastosPersonalesApplication implements CommandLineRunner {
     private void inicializarDatos() {
         try {
             System.out.println("🔧 Inicializando datos básicos...");
+            
+            // La limpieza agresiva ya se ejecutó y resolvió los duplicados
+            // Solo se ejecuta si se pasa como argumento "limpiar"
+            // limpiadorBaseDatos.ejecutarLimpiezaAgresiva();
+            
+            // Inicializar categorías predefinidas
             categoriaServicio.inicializarCategoriasPredefinidas();
             System.out.println("✅ Datos inicializados correctamente.");
         } catch (Exception e) {
