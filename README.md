@@ -1,300 +1,138 @@
-# 💰 Gestor de Compras Personales
+# Gestor de Gastos Personales
 
-Una aplicación Java desarrollada con Spring Boot para el control y gestión de finanzas personales. Permite registrar ingresos y gastos, categorizarlos, generar reportes y llevar un control detallado del balance financiero.
+Aplicación para el registro y seguimiento de ingresos y gastos personales. Esta guía explica cómo configurar, compilar y ejecutar el proyecto (backend Java/Spring Boot y frontend React + Vite).
 
-## 🚀 Características Principales
+## Resumen
 
-### ✅ Gestión de Movimientos Financieros
+-   Backend: Java 17+, Spring Boot (Maven). El código fuente está en `src/main/java`.
+-   Frontend: React + TypeScript + Vite, en la carpeta `frontend/`.
+-   Base de datos: PostgreSQL (se incluye un archivo `src/main/resources/data.sql` para datos de ejemplo).
 
--   **Registrar Gastos**: Descripción, monto, categoría y fecha automática
--   **Registrar Ingresos**: Salarios, bonos, ingresos extra con descripción y monto
--   **Editar Movimientos**: Modificar registros existentes
--   **Eliminar Movimientos**: Borrar transacciones incorrectas o duplicadas
+## Tecnologías
 
-### 🏷️ Sistema de Categorización
+-   Java 17+
+-   Spring Boot
+-   Maven (incluye wrapper `mvnw` / `mvnw.cmd`)
+-   PostgreSQL
+-   Node.js + npm
+-   Vite + React + TypeScript
 
--   **Categorías Predefinidas**: Alimentación, Transporte, Entretenimiento, Salud, Educación, Otros
--   **Gestión de Categorías**: Crear, editar y eliminar categorías personalizadas
--   **Asignación Automática**: Cada movimiento debe tener una categoría asignada
+## Requisitos previos
 
-### 📊 Reportes y Análisis
+Instala las siguientes herramientas en tu sistema:
 
--   **Balance Actual**: Cálculo automático de (Ingresos - Gastos)
--   **Reporte Mensual**: Resumen de movimientos del mes actual
--   **Gastos por Categoría**: Análisis de distribución de gastos
--   **Histórico**: Consulta de movimientos por período de tiempo
--   **Estadísticas Básicas**: Promedio de gastos, mayor gasto del mes, etc.
+-   Java JDK 17 o superior
+-   PostgreSQL 14/15+
+-   Node.js (LTS) y npm
+-   Git
 
-### 🔒 Validaciones del Sistema
+En Windows, los comandos de ejemplo usan PowerShell y `mvnw.cmd`.
 
--   **Montos**: Solo valores positivos y formato decimal correcto
--   **Fechas**: No permite fechas futuras
--   **Campos Obligatorios**: Descripción mínima de 3 caracteres
--   **Integridad**: No permite eliminar categorías con movimientos asociados
+## Configuración de la base de datos (PostgreSQL)
 
-## 🛠️ Tecnologías Utilizadas
-
--   **Java 17+** - Lenguaje de programación principal
--   **Spring Boot 3.2** - Framework para desarrollo de aplicaciones
--   **Spring Data JPA** - Manejo de persistencia y bases de datos
--   **Hibernate** - ORM para mapeo objeto-relacional
--   **PostgreSQL 15+** - Sistema de gestión de base de datos
--   **Maven** - Gestión de dependencias y construcción del proyecto
-
-## 📋 Requisitos del Sistema
-
-### Software Necesario
-
--   **Java JDK 17+** instalado y configurado
--   **PostgreSQL 15+** servidor de base de datos
--   **Maven 3.6+** (opcional, se puede usar el wrapper incluido)
--   **IDE** (IntelliJ IDEA, Eclipse, VS Code)
-
-### Hardware Mínimo
-
--   **RAM**: 4GB mínimo (8GB recomendado)
--   **Almacenamiento**: 500MB para el proyecto + base de datos
--   **Procesador**: Cualquier procesador moderno
-
-## ⚙️ Instalación y Configuración
-
-### 1. Configurar PostgreSQL
+1.  Crear la base de datos y un usuario (ajusta nombre/contraseña según tus políticas):
 
 ```sql
--- Crear la base de datos
 CREATE DATABASE gastos_personales;
-
--- Crear el usuario
 CREATE USER gastos_user WITH PASSWORD 'gastos123';
-
--- Otorgar permisos
 GRANT ALL PRIVILEGES ON DATABASE gastos_personales TO gastos_user;
-GRANT ALL ON SCHEMA public TO gastos_user;
 ```
 
-### 2. Clonar el proyecto
+2.  Opcional: ejecutar `src/main/resources/data.sql` para insertar datos de ejemplo.
 
-```bash
-git clone https://github.com/Jecsonrv/gastos-personales-app.git
-cd gastos-personales-app
-```
+## Variables de configuración
 
-### 3. Configurar la base de datos
-
-Editar el archivo `src/main/resources/application.properties` si es necesario:
+El proyecto usa `src/main/resources/application.properties` para la configuración de la conexión a la base de datos. Valores típicos:
 
 ```properties
 spring.datasource.url=jdbc:postgresql://localhost:5432/gastos_personales
 spring.datasource.username=gastos_user
 spring.datasource.password=gastos123
+server.port=8080
 ```
 
-### 4. Compilar el proyecto
+Si prefieres usar variables de entorno, puedes modificar `application.properties` o usar perfiles.
 
-```bash
-# Usando Maven instalado
-mvn clean install
+## Guía rápida: compilar y ejecutar (Windows PowerShell)
 
-# O usando el wrapper de Maven (recomendado)
-./mvnw clean install      # Linux/Mac
-mvnw.cmd clean install    # Windows
-```
+A continuación se muestran pasos mínimos para levantar backend y frontend en entorno de desarrollo.
 
-## 🚀 Ejecución de la Aplicación
+### Backend (Java / Spring Boot)
 
-### Modo Consola (Fase 1 - Actual)
+Desde la raíz del proyecto:
 
-```bash
-# Usando Maven
-mvn spring-boot:run
+```powershell
+# Compilar (usar wrapper que está incluido)
+.\\mvnw.cmd clean package -DskipTests
 
-# O usando el JAR compilado
+# Ejecutar la aplicación (usando wrapper)
+.\\mvnw.cmd spring-boot:run
+
+# O ejecutar el JAR generado
 java -jar target/gastos-personales-1.0.0.jar
-
-# O usando el wrapper
-./mvnw spring-boot:run
 ```
 
-### Modo Web (Fase 2 - Futuro)
+Notas:
 
-```bash
-# Usando Maven
-mvn spring-boot:run -Dspring-boot.run.arguments=web
+-   Si tienes Maven instalado globalmente puedes usar `mvn clean package`.
+-   Para cambiar el puerto modifica `server.port` en `application.properties`.
 
-# O usando el JAR compilado
-java -jar target/gastos-personales-1.0.0.jar web
+### Frontend (Desarrollo y Build)
+
+Entrar a la carpeta del frontend y ejecutar:
+
+```powershell
+cd frontend
+npm install
+npm run dev      # Levanta el servidor de desarrollo (Vite)
+# Para generar build de producción
+npm run build
 ```
 
-Una vez ejecutado en modo web, acceder a: `http://localhost:8080/gastos`
+El frontend, en modo desarrollo, estará disponible típicamente en `http://localhost:5173` (Vite).
 
-## 📱 Uso de la Aplicación (Modo Consola)
+## Uso básico
 
-### Menú Principal
+-   API REST: el backend expone endpoints bajo `http://localhost:8080` (revisa los controladores en `src/main/java/.../interfaz/web`).
+-   Frontend: si ejecutas `npm run dev`, abre el navegador en la URL que indique Vite; para producción sirve la carpeta `frontend/dist` detrás del backend o desde un servidor estático.
 
-```
-======================================
-    GESTOR DE COMPRAS PERSONALES
-======================================
-1. Registrar Gasto
-2. Registrar Ingreso
-3. Ver Balance Actual
-4. Listar Todos los Movimientos
-5. Ver Movimientos por Categoría
-6. Generar Reporte Mensual
-7. Gestionar Categorías
-8. Buscar Movimientos
-9. Estadísticas
-0. Salir
-======================================
+## Ejecutar pruebas
+
+-   Backend (maven):
+
+```powershell
+.\\mvnw.cmd test
 ```
 
-### Ejemplos de Uso
+-   Frontend: si hay tests configurados (Jest/Vite), usar `npm test` desde `frontend/`.
 
-#### Registrar un Gasto
+## Control de versiones y buenas prácticas
 
-```
-=== REGISTRAR NUEVO GASTO ===
-Descripción: Almuerzo restaurante
-Monto: $15.50
-Categorías disponibles:
-1. Alimentación
-2. Transporte
-3. Entretenimiento
-4. Salud
-5. Educación
-6. Otros
-Seleccione categoría: 1
+-   Antes de subir cambios, ejecuta `mvnw.cmd clean package` y `npm run build` para comprobar que el proyecto compila.
+-   No subas credenciales ni archivos sensibles. Revisa `.gitignore` y evita incluir archivos como `.env`, keystores, `node_modules/` o `frontend/dist`.
 
-✅ Gasto registrado exitosamente
-Fecha: 22/09/2025 14:30
-```
-
-#### Ver Balance
+## Estructura del proyecto (resumen)
 
 ```
-=== BALANCE FINANCIERO ===
-BALANCE GENERAL:
-Total Ingresos: $2500.00
-Total Gastos:   $1850.00
-Balance Total:  $650.00
-
-BALANCE DEL MES ACTUAL:
-Ingresos del mes: $2500.00
-Gastos del mes:   $850.00
-Balance del mes:  $1650.00
-
-🟢 ¡Vas bien este mes!
+/ (raíz)
+├─ src/main/java/...      # Backend Java
+├─ src/main/resources     # application.properties, data.sql
+├─ frontend/              # Frontend (Vite + React)
+├─ pom.xml                # Configuración Maven
+├─ mvnw, mvnw.cmd         # Maven wrapper
+└─ README.md              # Este archivo
 ```
 
-#### Reporte Mensual
+## Troubleshooting (problemas comunes)
 
-```
-======= REPORTE SEPTIEMBRE 2025 =======
-Total Ingresos: $2,500.00
-Total Gastos:   $1,850.00
-Balance:        $650.00
+-   Error de conexión a la DB: verifica que PostgreSQL esté en ejecución y que los parámetros de `application.properties` sean correctos.
+-   Puerto en uso (8080): cambia `server.port` en `application.properties` o termina el proceso que ocupa el puerto.
+-   Problemas con dependencias Node: elimina `node_modules/` y vuelve a `npm install`.
 
-GASTOS POR CATEGORÍA:
-- Alimentación:     $650.00 (35.1%)
-- Transporte:       $420.00 (22.7%)
-- Entretenimiento:  $380.00 (20.5%)
-- Salud:           $200.00 (10.8%)
-- Educación:       $150.00 (8.1%)
-- Otros:           $50.00  (2.7%)
-```
+## Contribuir
 
-## 🗂️ Estructura del Proyecto
+Si quieres contribuir:
 
-```
-gastor-compras-personales/
-├── src/main/java/com/proyecto/gastospersonales/
-│   ├── GastosPersonalesApplication.java      # Clase principal
-│   ├── modelo/
-│   │   ├── Movimiento.java                   # Entidad principal
-│   │   ├── Categoria.java                    # Categorías de gastos
-│   │   └── TipoMovimiento.java               # Enum INGRESO/GASTO
-│   ├── repositorio/
-│   │   ├── MovimientoRepositorio.java        # Acceso a datos de movimientos
-│   │   └── CategoriaRepositorio.java         # Acceso a datos de categorías
-│   ├── servicio/
-│   │   ├── MovimientoServicio.java           # Lógica de negocio
-│   │   └── CategoriaServicio.java            # Gestión de categorías
-│   └── consola/
-│       └── MenuPrincipal.java                # Interfaz de consola
-├── src/main/resources/
-│   ├── application.properties                # Configuración
-│   └── data.sql                             # Datos iniciales
-├── pom.xml                                  # Dependencias Maven
-└── README.md                                # Este archivo
-```
-
-## 🔧 Características Técnicas
-
-### Base de Datos
-
--   **2 tablas principales**:
-    -   `categoria` (id, nombre, descripcion, es_predefinida)
-    -   `movimiento` (id, descripcion, monto, fecha, tipo, categoria_id)
-
-### Arquitectura
-
--   **Patrón MVC** - Separación de responsabilidades
--   **Repository Pattern** - Abstracción de acceso a datos
--   **Service Layer** - Lógica de negocio centralizada
--   **Entity Models** - Representación de datos con JPA
-
-### Validaciones Implementadas
-
--   Validación de montos positivos
--   Validación de longitud de descripción (mínimo 3 caracteres)
--   Validación de fechas (no futuras)
--   Validación de integridad referencial
--   Validación de unicidad de nombres de categoría
-
-## 🚧 Roadmap - Desarrollo Futuro
-
-### Fase 2: Aplicación Web
-
--   [ ] Controladores web con Spring MVC
--   [ ] Vistas con Thymeleaf
--   [ ] Dashboard interactivo
--   [ ] Gráficos con Chart.js
--   [ ] API REST para móviles
-
-### Fase 3: Características Avanzadas
-
--   [ ] Exportación de reportes (PDF/Excel)
--   [ ] Filtros avanzados por fecha
--   [ ] Notificaciones y alertas
--   [ ] Backup automático
--   [ ] Importación de datos
-
-## 🐛 Solución de Problemas
-
-### Error de Conexión a Base de Datos
-
-```
-Verificar que PostgreSQL esté ejecutándose:
-- Windows: Servicios > PostgreSQL
-- Linux: sudo systemctl status postgresql
-- Mac: brew services list | grep postgresql
-```
-
-### Error "Port 8080 already in use"
-
-```
-# Cambiar el puerto en application.properties
-server.port=8081
-```
-
-### Error de Memoria
-
-```
-# Aumentar memoria de la JVM
-export MAVEN_OPTS="-Xmx1024m"
-mvn spring-boot:run
-```
-
-**Desarrollado con ❤️ usando Java y Spring Boot**  
-**Autor**: [Jecsonrv](https://github.com/Jecsonrv)  
-**Repositorio**: [gastos-personales-app](https://github.com/Jecsonrv/gastos-personales-app)
+1.  Crea un fork y una rama para tu trabajo.
+2.  Asegúrate de que los tests pasen y de que el proyecto compile localmente.
+3.  Abre un Pull Request con una descripción clara del cambio.
