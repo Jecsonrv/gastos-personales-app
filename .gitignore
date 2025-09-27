@@ -87,3 +87,21 @@ logs/
 
 # Personal configuration files
 application-local.properties
+node_modules
+
+# Environment files (sensitive)
+.env
+.env.*
+
+# Frontend build output / deps
+frontend/node_modules/
+frontend/dist/
+
+# Keystores / secrets
+*.jks
+*.keystore
+secrets/
+
+# npm debug logs
+npm-debug.log*
+

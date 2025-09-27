@@ -1,7 +1,7 @@
 package com.proyecto.gastospersonales;
 
-import com.proyecto.gastospersonales.consola.MenuPrincipal;
-import com.proyecto.gastospersonales.servicio.CategoriaServicio;
+import com.proyecto.gastospersonales.interfaz.console.ConsoleApplication;
+import com.proyecto.gastospersonales.domain.service.CategoriaService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
@@ -11,57 +11,57 @@ import org.springframework.context.ConfigurableApplicationContext;
 /**
  * Clase principal de la aplicación Gestor de Compras Personales
  * 
- * Esta aplicación puede ejecutarse en dos modos:
- * 1. Modo Consola: Para interacción por línea de comandos (Fase 1)
- * 2. Modo Web: Para interfaz web (Fase 2 - futuro)
+ * Clean Architecture implementada:
+ * - Domain: Entidades, servicios y DTOs del negocio
+ * - Application: Implementación de casos de uso
+ * - Infrastructure: Repositorios, configuraciones y persistencia
+ * - Interface: Consola (actual) y futura API REST
  * 
- * Por defecto se ejecuta en modo consola. Para modo web, se debe configurar
- * el perfil spring.profiles.active=web
+ * Fase 1: Aplicación de consola (MVP)
+ * Fase 2: API REST + Frontend React (futuro)
  */
 @SpringBootApplication
 public class GastosPersonalesApplication implements CommandLineRunner {
 
     @Autowired
-    private MenuPrincipal menuPrincipal;
+    private ConsoleApplication consoleApplication;
     
     @Autowired
-    private CategoriaServicio categoriaServicio;
+    private CategoriaService categoriaService;
     
     private static ConfigurableApplicationContext context;
 
     public static void main(String[] args) {
+        System.out.println("Iniciando Gestor de Compras Personales");
+        
         // Configurar codificación UTF-8 para la consola
         System.setProperty("file.encoding", "UTF-8");
         System.setProperty("console.encoding", "UTF-8");
         System.setProperty("java.awt.headless", "false");
         
-        // Verificar si se debe ejecutar en modo web
-        boolean modoWeb = args.length > 0 && "web".equals(args[0]);
+        // Determinar modo de ejecución
+        boolean modoConsola = "consola".equalsIgnoreCase(args.length > 0 ? args[0] : "web");
         
-        if (modoWeb) {
-            // Modo Web - Solo iniciar el servidor Spring Boot
-            System.out.println("🌐 Iniciando en modo WEB...");
-            System.out.println("La aplicación estará disponible en: http://localhost:8080/gastos");
-            context = SpringApplication.run(GastosPersonalesApplication.class, args);
+        if (modoConsola) {
+            System.out.println("Iniciando en Modo Consola");
         } else {
-            // Modo Consola - Ejecutar interfaz de consola
-            System.out.println("💻 Iniciando en modo CONSOLA...");
-            context = SpringApplication.run(GastosPersonalesApplication.class, args);
+            System.out.println("Iniciando en modo WEB");
+            System.out.println("Servidor disponible en: http://localhost:8080");
         }
+        
+        context = SpringApplication.run(GastosPersonalesApplication.class, args);
     }
 
     @Override
     public void run(String... args) throws Exception {
-        // Inicializar categorías predefinidas
-        inicializarDatos();
+        // Determinar modo de ejecución
+        boolean modoConsola = "consola".equalsIgnoreCase(args.length > 0 ? args[0] : "web");
         
-        // Verificar si se debe ejecutar en modo consola
-        boolean modoWeb = args.length > 0 && "web".equals(args[0]);
-        
-        if (!modoWeb) {
+        if (modoConsola) {
             try {
+                System.out.println("Iniciando interfaz de consola...");
                 // Ejecutar interfaz de consola
-                menuPrincipal.ejecutar();
+                consoleApplication.ejecutar();
             } catch (Exception e) {
                 System.err.println("❌ Error al ejecutar la aplicación de consola: " + e.getMessage());
                 e.printStackTrace();
@@ -69,27 +69,14 @@ public class GastosPersonalesApplication implements CommandLineRunner {
                 // Cerrar la aplicación cuando se termine la interacción por consola
                 cerrarAplicacion();
             }
-        }
-        // Si es modo web, la aplicación sigue ejecutándose como servidor
-    }
-    
-    /**
-     * Inicializa los datos básicos de la aplicación
-     */
-    private void inicializarDatos() {
-        try {
-            System.out.println("🔧 Inicializando datos básicos...");
-            
-            // La limpieza agresiva ya se ejecutó y resolvió los duplicados
-            // Solo se ejecuta si se pasa como argumento "limpiar"
-            // limpiadorBaseDatos.ejecutarLimpiezaAgresiva();
-            
-            // Inicializar categorías predefinidas
-            categoriaServicio.inicializarCategoriasPredefinidas();
-            System.out.println("✅ Datos inicializados correctamente.");
-        } catch (Exception e) {
-            System.err.println("❌ Error al inicializar datos: " + e.getMessage());
-            // No es crítico, la aplicación puede continuar
+        } else {
+            // Modo Web - La aplicación sigue ejecutándose como servidor
+            System.out.println("Servidor web iniciado correctamente");
+            System.out.println("Accede desde: http://localhost:8080");
+            System.out.println(" Para detener el servidor, presiona Ctrl+C");
+            System.out.println("Endpoints disponibles:");
+            System.out.println("   - /api/movimientos (próximamente)");
+            System.out.println("   - /api/categorias (próximamente)");
         }
     }
     
@@ -98,7 +85,7 @@ public class GastosPersonalesApplication implements CommandLineRunner {
      */
     public static void cerrarAplicacion() {
         if (context != null) {
-            System.out.println("🔄 Cerrando aplicación...");
+            System.out.println("Cerrando aplicación...");
             context.close();
             System.exit(0);
         }
@@ -118,6 +105,5 @@ public class GastosPersonalesApplication implements CommandLineRunner {
  * o
  * java -jar target/gastos-personales-1.0.0.jar web
  * 
- * Una vez ejecutado en modo web, acceder a:
- * http://localhost:8080/gastos
+ * Acceder a: http://localhost:8080
  */

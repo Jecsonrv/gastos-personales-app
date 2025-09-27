@@ -1,0 +1,118 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+    :root {
+        /* Modo claro - Colores profesionales con mejor contraste */
+        --background: 0 0% 98%;
+        --foreground: 222 20% 20%;
+        --card: 0 0% 100%;
+        --card-foreground: 222 20% 20%;
+        --popover: 0 0% 100%;
+        --popover-foreground: 222 20% 20%;
+        --primary: 221 83% 53%;
+        --primary-foreground: 0 0% 98%;
+        --secondary: 210 12% 93%;
+        --secondary-foreground: 222 20% 20%;
+        --muted: 210 12% 93%;
+        --muted-foreground: 215 12% 30%;
+        --accent: 210 12% 93%;
+        --accent-foreground: 222 20% 20%;
+        --destructive: 0 84% 60%;
+        --destructive-foreground: 0 0% 98%;
+        --border: 214 12% 83%;
+        --input: 214 12% 83%;
+        --ring: 221 83% 53%;
+        --radius: 8px;
+        --shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
+        --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1),
+            0 4px 6px -4px rgb(0 0 0 / 0.1);
+    }
+
+    .dark {
+        /* Modo oscuro - Estilo Windows con mejor contraste */
+        --background: 220 13% 18%;
+        --foreground: 210 10% 98%;
+        --card: 220 13% 21%;
+        --card-foreground: 210 10% 98%;
+        --popover: 220 13% 21%;
+        --popover-foreground: 210 10% 98%;
+        --primary: 221 83% 53%;
+        --primary-foreground: 0 0% 98%;
+        --secondary: 220 13% 25%;
+        --secondary-foreground: 210 10% 98%;
+        --muted: 220 13% 25%;
+        --muted-foreground: 220 8% 70%;
+        --accent: 220 13% 25%;
+        --accent-foreground: 210 10% 98%;
+        --destructive: 0 84% 60%;
+        --destructive-foreground: 0 0% 98%;
+        --border: 220 13% 30%;
+        --input: 220 13% 28%;
+        --ring: 221 83% 53%;
+        --shadow: 0 1px 3px 0 rgb(0 0 0 / 0.4), 0 1px 2px -1px rgb(0 0 0 / 0.4);
+        --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.5),
+            0 4px 6px -4px rgb(0 0 0 / 0.5);
+    }
+
+    * {
+        @apply border-border;
+    }
+
+    body {
+        @apply bg-background text-foreground transition-colors;
+        font-feature-settings: "rlig" 1, "calt" 1;
+    }
+
+    /* Mejoras para elementos específicos */
+    .card {
+        @apply bg-card text-card-foreground shadow-sm border transition-colors;
+        box-shadow: var(--shadow);
+    }
+
+    .card-elevated {
+        box-shadow: var(--shadow-lg);
+    }
+
+    /* Asegurar que los inputs y botones tengan buen contraste */
+    .btn-primary {
+        @apply bg-primary text-primary-foreground hover:bg-primary/90 transition-colors;
+    }
+
+    .btn-secondary {
+        @apply bg-secondary text-secondary-foreground hover:bg-secondary/80 transition-colors;
+    }
+
+    /* Mejorar contraste específico para textos */
+    .text-foreground {
+        color: hsl(var(--foreground));
+    }
+
+    .text-muted-foreground {
+        color: hsl(var(--muted-foreground));
+    }
+
+    /* Modo claro - Textos más oscuros para mejor legibilidad */
+    :root .text-muted-foreground {
+        color: hsl(215 12% 30%);
+    }
+
+    /* Modo oscuro - Textos más claros */
+    .dark .text-muted-foreground {
+        color: hsl(220 8% 70%);
+    }
+
+    /* Mejorar contraste en tablas */
+    .table-header {
+        @apply text-muted-foreground font-medium;
+        opacity: 0.9;
+    }
+
+    /* Mejorar contraste en botones secundarios */
+    .btn-ghost {
+        @apply hover:bg-accent hover:text-accent-foreground transition-colors;
+    }
+}
+
+/* Reglas duplicadas eliminadas - solo mantenemos una declaración de body */

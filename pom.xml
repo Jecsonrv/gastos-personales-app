@@ -29,11 +29,7 @@
             <artifactId>spring-boot-starter-web</artifactId>
         </dependency>
         
-        <!-- Thymeleaf para futuras vistas web -->
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-thymeleaf</artifactId>
-        </dependency>
+        <!-- Configuración adicional será agregada aquí para futuros endpoints REST -->
         
         <!-- PostgreSQL Driver -->
         <dependency>
