@@ -31,11 +31,15 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
     const checkSession = async (): Promise<void> => {
         try {
+            console.log('[AuthContext] Starting session check...');
             setAuthState(prev => ({ ...prev, isLoading: true }));
             
             // Check if there's a saved user in localStorage
             const savedUser = localStorage.getItem('auth-user');
+            console.log('[AuthContext] Saved user in localStorage:', savedUser ? 'exists' : 'not found');
+            
             if (!savedUser) {
+                console.log('[AuthContext] No saved user, setting unauthenticated state');
                 setAuthState({
                     isAuthenticated: false,
                     user: null,
@@ -44,17 +48,43 @@ export function AuthProvider({ children }: AuthProviderProps) {
                 return;
             }
 
-            // Validate session with backend
-            const user = await authService.validateSession();
-            setAuthState({
-                isAuthenticated: true,
-                user,
-                isLoading: false,
-            });
+            try {
+                // Parse the saved user
+                const parsedUser = JSON.parse(savedUser);
+                console.log('[AuthContext] Parsed saved user:', parsedUser);
+                
+                // For now, trust the localStorage and validate in background
+                setAuthState({
+                    isAuthenticated: true,
+                    user: parsedUser,
+                    isLoading: false,
+                });
+                console.log('[AuthContext] User authenticated from localStorage');
+                
+                // Validate session with backend in background (don't await)
+                authService.validateSession().catch((error: any) => {
+                    console.warn('[AuthContext] Background session validation failed:', error);
+                    // Only clear if it's definitely an auth error
+                    if (error.message === 'Session expired') {
+                        localStorage.removeItem('auth-user');
+                        setAuthState({
+                            isAuthenticated: false,
+                            user: null,
+                            isLoading: false,
+                        });
+                    }
+                });
+            } catch (parseError) {
+                console.error('[AuthContext] Failed to parse saved user:', parseError);
+                localStorage.removeItem('auth-user');
+                setAuthState({
+                    isAuthenticated: false,
+                    user: null,
+                    isLoading: false,
+                });
+            }
         } catch (error) {
-            console.error('Session validation failed:', error);
-            // Clear invalid session
-            localStorage.removeItem('auth-user');
+            console.error('Session check failed:', error);
             setAuthState({
                 isAuthenticated: false,
                 user: null,
@@ -65,19 +95,23 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
     const login = async (credentials: LoginRequest): Promise<LoginResponse> => {
         try {
+            console.log('[AuthContext] Starting login process...', credentials);
             setAuthState(prev => ({ ...prev, isLoading: true }));
             
             const response = await authService.login(credentials);
+            console.log('[AuthContext] Login response:', response);
             
             if (response.success && response.usuario) {
                 // Save user to localStorage for persistence
                 localStorage.setItem('auth-user', JSON.stringify(response.usuario));
+                console.log('[AuthContext] User saved to localStorage');
                 
                 setAuthState({
                     isAuthenticated: true,
                     user: response.usuario,
                     isLoading: false,
                 });
+                console.log('[AuthContext] AuthState updated - user authenticated');
                 
                 return {
                     success: true,
@@ -85,6 +119,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
                     usuario: response.usuario,
                 };
             } else {
+                console.log('[AuthContext] Login failed:', response.message);
                 setAuthState({
                     isAuthenticated: false,
                     user: null,

@@ -41,7 +41,7 @@ public class MovimientoServiceImpl implements MovimientoService {
      */
     @Override
     public Movimiento registrarGasto(String descripcion, BigDecimal monto, Long categoriaId) {
-        return registrarMovimiento(descripcion, monto, TipoMovimiento.GASTO, categoriaId);
+        return registrarMovimiento(descripcion, monto, TipoMovimiento.GASTO, categoriaId, null);
     }
     
     /**
@@ -49,13 +49,29 @@ public class MovimientoServiceImpl implements MovimientoService {
      */
     @Override
     public Movimiento registrarIngreso(String descripcion, BigDecimal monto, Long categoriaId) {
-        return registrarMovimiento(descripcion, monto, TipoMovimiento.INGRESO, categoriaId);
+        return registrarMovimiento(descripcion, monto, TipoMovimiento.INGRESO, categoriaId, null);
+    }
+    
+    /**
+     * Registra un nuevo gasto con usuario específico
+     */
+    @Override
+    public Movimiento registrarGasto(String descripcion, BigDecimal monto, Long categoriaId, Long usuarioId) {
+        return registrarMovimiento(descripcion, monto, TipoMovimiento.GASTO, categoriaId, usuarioId);
+    }
+    
+    /**
+     * Registra un nuevo ingreso con usuario específico
+     */
+    @Override
+    public Movimiento registrarIngreso(String descripcion, BigDecimal monto, Long categoriaId, Long usuarioId) {
+        return registrarMovimiento(descripcion, monto, TipoMovimiento.INGRESO, categoriaId, usuarioId);
     }
     
     /**
      * Registra un movimiento (gasto o ingreso)
      */
-    private Movimiento registrarMovimiento(String descripcion, BigDecimal monto, TipoMovimiento tipo, Long categoriaId) {
+    private Movimiento registrarMovimiento(String descripcion, BigDecimal monto, TipoMovimiento tipo, Long categoriaId, Long usuarioId) {
         // Validar parámetros
         if (descripcion == null || descripcion.trim().length() < 3) {
             throw new IllegalArgumentException("La descripción debe tener al menos 3 caracteres");
@@ -74,12 +90,23 @@ public class MovimientoServiceImpl implements MovimientoService {
                 .orElseThrow(() -> new IllegalArgumentException("Categoría no encontrada"));
         
         // Crear el movimiento
-        Movimiento movimiento = new Movimiento(
-                descripcion.trim(), 
-                monto.setScale(2, RoundingMode.HALF_UP), 
-                tipo, 
-                categoria
-        );
+        Movimiento movimiento;
+        if (usuarioId != null) {
+            movimiento = new Movimiento(
+                    descripcion.trim(), 
+                    monto.setScale(2, RoundingMode.HALF_UP), 
+                    tipo, 
+                    categoria,
+                    usuarioId
+            );
+        } else {
+            movimiento = new Movimiento(
+                    descripcion.trim(), 
+                    monto.setScale(2, RoundingMode.HALF_UP), 
+                    tipo, 
+                    categoria
+            );
+        }
         
         return movimientoRepository.save(movimiento);
     }
@@ -109,6 +136,16 @@ public class MovimientoServiceImpl implements MovimientoService {
     @Transactional(readOnly = true)
     public List<Movimiento> obtenerUltimosMovimientos() {
         return movimientoRepository.findTop10ByOrderByFechaDesc();
+    }
+    
+    /**
+     * Obtiene los últimos movimientos de un usuario
+     */
+    @Override
+    @Transactional(readOnly = true)
+    public List<Movimiento> obtenerUltimosMovimientos(Long usuarioId, int limite) {
+        List<Movimiento> movimientos = movimientoRepository.findByUsuarioIdOrderByFechaDesc(usuarioId);
+        return movimientos.size() > limite ? movimientos.subList(0, limite) : movimientos;
     }
     
     /**

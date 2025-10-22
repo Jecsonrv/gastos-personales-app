@@ -56,6 +56,7 @@ export function LoginPage() {
 
     // Redirect if already authenticated
     if (isAuthenticated) {
+        console.log('[Login] User is authenticated, redirecting to dashboard...');
         return <Navigate to="/dashboard" replace />;
     }
 
@@ -151,6 +152,8 @@ export function LoginPage() {
         e.preventDefault();
         setFormError("");
         
+        console.log('[Login] Form submitted with data:', loginData);
+        
         // Basic validation
         if (!loginData.nombreUsuario.trim() || !loginData.password.trim()) {
             setFormError("Por favor, ingresa usuario y contraseña");
@@ -158,12 +161,17 @@ export function LoginPage() {
         }
 
         setIsSubmitting(true);
+        console.log('[Login] Starting login process...');
         
         try {
             const response = await login(loginData);
+            console.log('[Login] Login response received:', response);
             
             if (!response.success) {
+                console.log('[Login] Login failed:', response.message);
                 setFormError(response.message || "Error al iniciar sesión");
+            } else {
+                console.log('[Login] Login successful! Should redirect now...');
             }
         } catch (error) {
             console.error("Login error:", error);

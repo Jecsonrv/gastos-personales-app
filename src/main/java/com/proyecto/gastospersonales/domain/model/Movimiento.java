@@ -65,6 +65,11 @@ public class Movimiento {
     @JsonManagedReference
     private Categoria categoria;
     
+    // Relación con usuario - por ahora solo el ID
+    @NotNull(message = "El usuario es obligatorio")
+    @Column(name = "usuario_id", nullable = false)
+    private Long usuarioId;
+    
     // Constructores
     public Movimiento() {
         this.fecha = LocalDateTime.now();
@@ -84,6 +89,15 @@ public class Movimiento {
         this.tipo = tipo;
         this.categoria = categoria;
         this.fecha = fecha;
+    }
+    
+    public Movimiento(String descripcion, BigDecimal monto, TipoMovimiento tipo, Categoria categoria, Long usuarioId) {
+        this.descripcion = descripcion;
+        this.monto = monto;
+        this.tipo = tipo;
+        this.categoria = categoria;
+        this.usuarioId = usuarioId;
+        this.fecha = LocalDateTime.now();
     }
     
     // Getters y Setters
@@ -133,6 +147,14 @@ public class Movimiento {
     
     public void setCategoria(Categoria categoria) {
         this.categoria = categoria;
+    }
+    
+    public Long getUsuarioId() {
+        return usuarioId;
+    }
+    
+    public void setUsuarioId(Long usuarioId) {
+        this.usuarioId = usuarioId;
     }
     
     // Métodos de utilidad

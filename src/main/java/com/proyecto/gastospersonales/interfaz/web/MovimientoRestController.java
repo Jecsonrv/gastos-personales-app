@@ -1,17 +1,29 @@
 package com.proyecto.gastospersonales.interfaz.web;
 
-import com.proyecto.gastospersonales.domain.service.MovimientoService;
-import com.proyecto.gastospersonales.domain.model.Movimiento;
-import com.proyecto.gastospersonales.domain.model.TipoMovimiento;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
-
-import java.math.BigDecimal;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+
+import com.proyecto.gastospersonales.domain.model.Movimiento;
+import com.proyecto.gastospersonales.domain.model.TipoMovimiento;
+import com.proyecto.gastospersonales.domain.model.Usuario;
+import com.proyecto.gastospersonales.domain.service.MovimientoService;
+
+import jakarta.servlet.http.HttpSession;
 
 /**
  * Controlador REST para la gestión de movimientos financieros
@@ -19,7 +31,7 @@ import java.util.Optional;
  */
 @RestController
 @RequestMapping("/api/movimientos")
-@CrossOrigin(origins = {"http://localhost:3000", "http://localhost:5173"}) // React/Vite dev servers
+@CrossOrigin(origins = {"http://localhost:3000", "http://localhost:5173", "http://localhost:5174"}) // React/Vite dev servers
 public class MovimientoRestController {
     
     @Autowired
@@ -53,15 +65,61 @@ public class MovimientoRestController {
     }
     
     /**
+     * Crea un nuevo movimiento (gasto o ingreso)
+     */
+    @PostMapping
+    public ResponseEntity<Movimiento> crearMovimiento(
+            @RequestBody MovimientoRequest request,
+            HttpSession session) {
+        try {
+            Usuario usuario = (Usuario) session.getAttribute("usuario");
+            if (usuario == null) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+            }
+            
+            Movimiento movimiento;
+            if ("GASTO".equalsIgnoreCase(request.getTipo())) {
+                movimiento = movimientoService.registrarGasto(
+                    request.getDescripcion(), 
+                    request.getMonto(), 
+                    request.getCategoriaId(), 
+                    usuario.getId());
+            } else if ("INGRESO".equalsIgnoreCase(request.getTipo())) {
+                movimiento = movimientoService.registrarIngreso(
+                    request.getDescripcion(), 
+                    request.getMonto(), 
+                    request.getCategoriaId(), 
+                    usuario.getId());
+            } else {
+                return ResponseEntity.badRequest().build();
+            }
+            
+            return ResponseEntity.status(HttpStatus.CREATED).body(movimiento);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().build();
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
+    
+    /**
      * Registra un nuevo gasto
      */
     @PostMapping("/gastos")
     public ResponseEntity<Movimiento> registrarGasto(
-            @RequestParam String descripcion,
-            @RequestParam BigDecimal monto,
-            @RequestParam Long categoriaId) {
+            @RequestBody MovimientoRequest request,
+            HttpSession session) {
         try {
-            Movimiento gasto = movimientoService.registrarGasto(descripcion, monto, categoriaId);
+            Usuario usuario = (Usuario) session.getAttribute("usuario");
+            if (usuario == null) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+            }
+            
+            Movimiento gasto = movimientoService.registrarGasto(
+                request.getDescripcion(), 
+                request.getMonto(), 
+                request.getCategoriaId(), 
+                usuario.getId());
             return ResponseEntity.status(HttpStatus.CREATED).body(gasto);
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().build();
@@ -75,11 +133,19 @@ public class MovimientoRestController {
      */
     @PostMapping("/ingresos")
     public ResponseEntity<Movimiento> registrarIngreso(
-            @RequestParam String descripcion,
-            @RequestParam BigDecimal monto,
-            @RequestParam Long categoriaId) {
+            @RequestBody MovimientoRequest request,
+            HttpSession session) {
         try {
-            Movimiento ingreso = movimientoService.registrarIngreso(descripcion, monto, categoriaId);
+            Usuario usuario = (Usuario) session.getAttribute("usuario");
+            if (usuario == null) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+            }
+            
+            Movimiento ingreso = movimientoService.registrarIngreso(
+                request.getDescripcion(), 
+                request.getMonto(), 
+                request.getCategoriaId(), 
+                usuario.getId());
             return ResponseEntity.status(HttpStatus.CREATED).body(ingreso);
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().build();
@@ -137,9 +203,16 @@ public class MovimientoRestController {
      * Obtiene los últimos movimientos
      */
     @GetMapping("/recientes")
-    public ResponseEntity<List<Movimiento>> obtenerUltimosMovimientos() {
+    public ResponseEntity<List<Movimiento>> obtenerUltimosMovimientos(
+            @RequestParam(defaultValue = "10") int limit,
+            HttpSession session) {
         try {
-            List<Movimiento> movimientos = movimientoService.obtenerUltimosMovimientos();
+            Usuario usuario = (Usuario) session.getAttribute("usuario");
+            if (usuario == null) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+            }
+            
+            List<Movimiento> movimientos = movimientoService.obtenerUltimosMovimientos(usuario.getId(), limit);
             return ResponseEntity.ok(movimientos);
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
@@ -152,12 +225,10 @@ public class MovimientoRestController {
     @PutMapping("/{id}")
     public ResponseEntity<Movimiento> actualizarMovimiento(
             @PathVariable Long id,
-            @RequestParam(required = false) String descripcion,
-            @RequestParam(required = false) BigDecimal monto,
-            @RequestParam(required = false) Long categoriaId) {
+            @RequestBody MovimientoRequest request) {
         try {
             Movimiento movimientoActualizado = movimientoService.actualizarMovimiento(
-                    id, descripcion, monto, categoriaId);
+                    id, request.getDescripcion(), request.getMonto(), request.getCategoriaId());
             return ResponseEntity.ok(movimientoActualizado);
         } catch (IllegalArgumentException e) {
             return ResponseEntity.notFound().build();

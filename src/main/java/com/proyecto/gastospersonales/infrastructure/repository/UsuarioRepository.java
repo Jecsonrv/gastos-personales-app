@@ -1,12 +1,13 @@
 package com.proyecto.gastospersonales.infrastructure.repository;
 
-import com.proyecto.gastospersonales.domain.model.Usuario;
+import java.util.Optional;
+
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
-import java.util.Optional;
+import com.proyecto.gastospersonales.domain.model.Usuario;
 
 /**
  * Repositorio para la entidad Usuario

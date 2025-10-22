@@ -1,22 +1,30 @@
 package com.proyecto.gastospersonales.interfaz.web;
 
-import com.proyecto.gastospersonales.domain.model.Usuario;
-import com.proyecto.gastospersonales.domain.service.UsuarioService;
+import java.util.Map;
+import java.util.Optional;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
+
+import com.proyecto.gastospersonales.domain.model.Usuario;
+import com.proyecto.gastospersonales.domain.service.UsuarioService;
 
 import jakarta.servlet.http.HttpSession;
-import java.util.Map;
-import java.util.Optional;
 
 /**
  * Controlador para Fine - Gestión de Finanzas Personales
  * Maneja autenticación, login y páginas principales
  */
 @Controller
+@CrossOrigin(origins = {"http://localhost:3000", "http://localhost:5173", "http://localhost:5174"})
 public class AuthController {
 
     @Autowired
@@ -346,5 +354,19 @@ public class AuthController {
             ));
         }
         return ResponseEntity.status(401).body(Map.of("error", "No autenticado"));
+    }
+    
+    /**
+     * Debug endpoint to test frontend connectivity
+     */
+    @GetMapping("/api/auth/test")
+    @ResponseBody
+    public ResponseEntity<Map<String, Object>> testEndpoint(HttpSession session) {
+        return ResponseEntity.ok(Map.of(
+            "status", "Backend is working",
+            "timestamp", new java.util.Date().toString(),
+            "sessionId", session.getId(),
+            "hasUser", session.getAttribute("usuario") != null
+        ));
     }
 }

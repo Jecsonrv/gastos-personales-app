@@ -1,15 +1,16 @@
 package com.proyecto.gastospersonales.application.service;
 
-import com.proyecto.gastospersonales.domain.model.Categoria;
-import com.proyecto.gastospersonales.domain.service.CategoriaService;
-import com.proyecto.gastospersonales.infrastructure.repository.CategoriaRepositoryInterface;
+import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collectors;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
-import java.util.Optional;
-import java.util.stream.Collectors;
+import com.proyecto.gastospersonales.domain.model.Categoria;
+import com.proyecto.gastospersonales.domain.service.CategoriaService;
+import com.proyecto.gastospersonales.infrastructure.repository.CategoriaRepositoryInterface;
 
 /**
  * Implementación de la lógica de negocio para las categorías
@@ -119,10 +120,11 @@ public class CategoriaServiceImpl implements CategoriaService {
         Categoria categoria = categoriaRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Categoría no encontrada con ID: " + id));
         
-        // Validar que no tenga movimientos asociados
-        if (categoria.getCantidadMovimientos() > 0) {
+        // Validar que no tenga movimientos asociados usando consulta directa
+        long cantidadMovimientos = categoriaRepository.countMovimientosByCategoriaId(id);
+        if (cantidadMovimientos > 0) {
             throw new IllegalArgumentException("No se puede eliminar la categoría '" + categoria.getNombre() + 
-                    "' porque tiene " + categoria.getCantidadMovimientos() + " movimientos asociados");
+                    "' porque tiene " + cantidadMovimientos + " movimientos asociados");
         }
         
         categoriaRepository.delete(categoria);

@@ -118,6 +118,8 @@ public interface MovimientoRepositoryInterface extends JpaRepository<Movimiento,
      */
     List<Movimiento> findTop10ByOrderByFechaDesc();
     
+    List<Movimiento> findByUsuarioIdOrderByFechaDesc(Long usuarioId);
+    
     List<Movimiento> findTop5ByTipoOrderByMontoDesc(TipoMovimiento tipo);
     
     /**

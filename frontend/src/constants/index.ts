@@ -8,7 +8,7 @@ export const API_ENDPOINTS = {
     AUTH: "/auth",
 } as const;
 
-// Configuración de la aplicación
+// Configuracion de la aplicacion
 export const APP_CONFIG = {
     NAME: "Gestor de Gastos Personales",
     VERSION: "2.0.0",
@@ -17,7 +17,7 @@ export const APP_CONFIG = {
     CURRENCY: "USD",
 } as const;
 
-// Colores predeterminados para categorías
+// Colores predeterminados para categorias
 export const CATEGORIA_COLORS = [
     "#ef4444", // red-500
     "#f97316", // orange-500
@@ -37,7 +37,7 @@ export const CATEGORIA_COLORS = [
     "#ec4899", // pink-500
 ] as const;
 
-// Íconos predeterminados para categorías
+// Iconos predeterminados para categorias
 export const CATEGORIA_ICONS = [
     "ShoppingCart",
     "Home",
@@ -69,9 +69,9 @@ export const MESSAGES = {
         MOVIMIENTO_CREATED: "Movimiento creado exitosamente",
         MOVIMIENTO_UPDATED: "Movimiento actualizado exitosamente",
         MOVIMIENTO_DELETED: "Movimiento eliminado exitosamente",
-        CATEGORIA_CREATED: "Categoría creada exitosamente",
-        CATEGORIA_UPDATED: "Categoría actualizada exitosamente",
-        CATEGORIA_DELETED: "Categoría eliminada exitosamente",
+        CATEGORIA_CREATED: "Categoria creada exitosamente",
+        CATEGORIA_UPDATED: "Categoria actualizada exitosamente",
+        CATEGORIA_DELETED: "Categoria eliminada exitosamente",
         LOGIN_SUCCESS: "Inicio de sesión exitoso",
         LOGOUT_SUCCESS: "Sesión cerrada exitosamente",
     },
@@ -80,19 +80,19 @@ export const MESSAGES = {
         NETWORK: "Error de conexión con el servidor",
         VALIDATION: "Por favor, revisa los datos ingresados",
         NOT_FOUND: "El recurso solicitado no fue encontrado",
-        UNAUTHORIZED: "No tienes permisos para realizar esta acción",
+        UNAUTHORIZED: "No tienes permisos para realizar esta accion",
         LOGIN_FAILED: "Usuario o contraseña incorrectos",
-        SESSION_EXPIRED: "Tu sesión ha expirado, por favor inicia sesión nuevamente",
+        SESSION_EXPIRED: "Tu sesion ha expirado, por favor inicia sesion nuevamente",
     },
     CONFIRM: {
         DELETE_MOVIMIENTO:
-            "¿Estás seguro de que deseas eliminar este movimiento?",
+            "¿Estas seguro de que deseas eliminar este movimiento?",
         DELETE_CATEGORIA:
-            "¿Estás seguro de que deseas eliminar esta categoría?",
+            "¿Estas seguro de que deseas eliminar esta categoria?",
     },
 } as const;
 
-// Configuración de gráficos
+// Configuracion de graficos
 export const CHART_CONFIG = {
     COLORS: {
         PRIMARY: "#3b82f6",

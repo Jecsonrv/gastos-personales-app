@@ -1,9 +1,9 @@
 package com.proyecto.gastospersonales.domain.service;
 
-import com.proyecto.gastospersonales.domain.model.Usuario;
-
 import java.util.List;
 import java.util.Optional;
+
+import com.proyecto.gastospersonales.domain.model.Usuario;
 
 /**
  * Interfaz del servicio de Usuario

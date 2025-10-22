@@ -67,4 +67,10 @@ public interface CategoriaRepositoryInterface extends JpaRepository<Categoria, L
            "FROM Categoria c " +
            "ORDER BY cantidadMovimientos DESC, c.nombre ASC")
     List<Object[]> findCategoriasConCantidadMovimientos();
+    
+    /**
+     * Cuenta los movimientos asociados a una categoría específica
+     */
+    @Query("SELECT COUNT(m) FROM Movimiento m WHERE m.categoria.id = :categoriaId")
+    long countMovimientosByCategoriaId(Long categoriaId);
 }
