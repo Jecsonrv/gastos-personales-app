@@ -58,6 +58,10 @@ set ERROR_CODE=0
 @setlocal
 
 @REM ==== START VALIDATION ====
+@REM Set default JAVA_HOME if not defined
+if "%JAVA_HOME%" == "" (
+    set "JAVA_HOME=C:\Users\Noe Portillo\AppData\Local\Programs\Eclipse Adoptium\jdk-21.0.7.6-hotspot"
+)
 if not "%JAVA_HOME%" == "" goto OkJHome
 
 echo.

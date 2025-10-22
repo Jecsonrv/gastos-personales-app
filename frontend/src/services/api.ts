@@ -171,6 +171,7 @@ class ApiService {
                 "Content-Type": "application/json",
                 Accept: "application/json",
             },
+            withCredentials: true, // Important for session cookies
         });
 
         this.setupInterceptors();
@@ -191,7 +192,7 @@ class ApiService {
             }
         );
 
-        // Response interceptor - avoid verbose response logs
+        // Response interceptor - handle authentication errors
         this.client.interceptors.response.use(
             (response) => {
                 return response;
@@ -199,6 +200,17 @@ class ApiService {
             (error) => {
                 console.error("❌ Response Error:", error);
                 const status = error.response?.status;
+                
+                // Handle authentication errors
+                if (status === 401) {
+                    // Session expired or invalid
+                    localStorage.removeItem('auth-user');
+                    // Redirect to login if not already there
+                    if (window.location.pathname !== '/login') {
+                        window.location.href = '/login';
+                    }
+                }
+                
                 const message =
                     error.response?.data?.message ||
                     error.message ||

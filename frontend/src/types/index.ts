@@ -1,5 +1,55 @@
 // Tipos para las entidades del dominio
 
+export interface Usuario {
+    id: number;
+    nombreUsuario: string;
+    email: string;
+    fechaCreacion: string;
+    ultimoAcceso?: string;
+    activo: boolean;
+}
+
+export interface LoginRequest {
+    nombreUsuario: string;
+    password: string;
+}
+
+export interface RegisterRequest {
+    nombreUsuario: string;
+    email: string;
+    password: string;
+    nombreCompleto: string;
+}
+
+export interface LoginResponse {
+    success: boolean;
+    message?: string;
+    usuario?: Usuario;
+    sessionId?: string;
+}
+
+export interface RegisterResponse {
+    success: boolean;
+    message?: string;
+    usuario?: Usuario;
+}
+
+export interface UsernameAvailability {
+    available: boolean;
+    message: string;
+}
+
+export interface EmailAvailability {
+    available: boolean;
+    message: string;
+}
+
+export interface AuthState {
+    isAuthenticated: boolean;
+    user: Usuario | null;
+    isLoading: boolean;
+}
+
 export interface Categoria {
     id: number;
     nombre: string;

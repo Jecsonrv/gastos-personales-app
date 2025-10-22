@@ -5,6 +5,7 @@ export const API_ENDPOINTS = {
     MOVIMIENTOS: "/movimientos",
     CATEGORIAS: "/categorias",
     REPORTES: "/reportes",
+    AUTH: "/auth",
 } as const;
 
 // Configuración de la aplicación
@@ -71,6 +72,8 @@ export const MESSAGES = {
         CATEGORIA_CREATED: "Categoría creada exitosamente",
         CATEGORIA_UPDATED: "Categoría actualizada exitosamente",
         CATEGORIA_DELETED: "Categoría eliminada exitosamente",
+        LOGIN_SUCCESS: "Inicio de sesión exitoso",
+        LOGOUT_SUCCESS: "Sesión cerrada exitosamente",
     },
     ERROR: {
         GENERIC: "Ha ocurrido un error inesperado",
@@ -78,6 +81,8 @@ export const MESSAGES = {
         VALIDATION: "Por favor, revisa los datos ingresados",
         NOT_FOUND: "El recurso solicitado no fue encontrado",
         UNAUTHORIZED: "No tienes permisos para realizar esta acción",
+        LOGIN_FAILED: "Usuario o contraseña incorrectos",
+        SESSION_EXPIRED: "Tu sesión ha expirado, por favor inicia sesión nuevamente",
     },
     CONFIRM: {
         DELETE_MOVIMIENTO:

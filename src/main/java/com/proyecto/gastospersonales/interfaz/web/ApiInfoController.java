@@ -59,12 +59,4 @@ public class ApiInfoController {
         
         return ResponseEntity.ok(estado);
     }
-    
-    /**
-     * Endpoint raíz que redirige a la información
-     */
-    @GetMapping("/")
-    public ResponseEntity<Map<String, Object>> raiz() {
-        return obtenerInformacionApi();
-    }
 }
