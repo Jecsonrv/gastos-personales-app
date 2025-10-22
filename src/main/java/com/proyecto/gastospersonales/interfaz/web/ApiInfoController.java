@@ -1,11 +1,14 @@
 package com.proyecto.gastospersonales.interfaz.web;
 
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
-
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Map;
+
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 /**
  * Controlador REST para información general de la API
@@ -13,7 +16,7 @@ import java.util.Map;
  */
 @RestController
 @RequestMapping("/api")
-@CrossOrigin(origins = {"http://localhost:3000", "http://localhost:5173"}) // React/Vite dev servers
+@CrossOrigin(origins = {"http://localhost:3000", "http://localhost:5173", "http://localhost:5174"}) // React/Vite dev servers
 public class ApiInfoController {
     
     /**
@@ -58,13 +61,5 @@ public class ApiInfoController {
         );
         
         return ResponseEntity.ok(estado);
-    }
-    
-    /**
-     * Endpoint raíz que redirige a la información
-     */
-    @GetMapping("/")
-    public ResponseEntity<Map<String, Object>> raiz() {
-        return obtenerInformacionApi();
     }
 }

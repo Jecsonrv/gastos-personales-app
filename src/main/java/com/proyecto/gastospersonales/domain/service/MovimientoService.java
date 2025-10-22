@@ -19,11 +19,17 @@ public interface MovimientoService {
     
     Movimiento registrarIngreso(String descripcion, BigDecimal monto, Long categoriaId);
     
+    Movimiento registrarGasto(String descripcion, BigDecimal monto, Long categoriaId, Long usuarioId);
+    
+    Movimiento registrarIngreso(String descripcion, BigDecimal monto, Long categoriaId, Long usuarioId);
+    
     List<Movimiento> obtenerTodosLosMovimientos();
     
     Optional<Movimiento> obtenerMovimientoPorId(Long id);
     
     List<Movimiento> obtenerUltimosMovimientos();
+    
+    List<Movimiento> obtenerUltimosMovimientos(Long usuarioId, int limite);
     
     List<Movimiento> obtenerMovimientosPorTipo(TipoMovimiento tipo);
     

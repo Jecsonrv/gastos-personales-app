@@ -1,14 +1,27 @@
 package com.proyecto.gastospersonales.interfaz.web;
 
-import com.proyecto.gastospersonales.domain.service.CategoriaService;
-import com.proyecto.gastospersonales.domain.model.Categoria;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 
-import java.util.List;
-import java.util.Optional;
+import com.proyecto.gastospersonales.domain.model.Categoria;
+import com.proyecto.gastospersonales.domain.service.CategoriaService;
 
 /**
  * Controlador REST para la gestión de categorías
@@ -16,11 +29,12 @@ import java.util.Optional;
  */
 @RestController
 @RequestMapping("/api/categorias")
-@CrossOrigin(origins = {"http://localhost:3000", "http://localhost:5173"}) // React/Vite dev servers
+@CrossOrigin(origins = {"http://localhost:3000", "http://localhost:5173", "http://localhost:5174"}, allowCredentials = "true") // React/Vite dev servers
 public class CategoriaRestController {
     
     @Autowired
     private CategoriaService categoriaService;
+    private static final Logger logger = LoggerFactory.getLogger(CategoriaRestController.class);
     
     /**
      * Obtiene todas las categorías
@@ -31,6 +45,7 @@ public class CategoriaRestController {
             List<Categoria> categorias = categoriaService.obtenerTodasLasCategorias();
             return ResponseEntity.ok(categorias);
         } catch (Exception e) {
+            logger.error("Error obteniendo todas las categorias", e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
@@ -45,6 +60,7 @@ public class CategoriaRestController {
             return categoria.map(ResponseEntity::ok)
                     .orElse(ResponseEntity.notFound().build());
         } catch (Exception e) {
+            logger.error("Error obteniendo categoria por id {}", id, e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
@@ -58,6 +74,7 @@ public class CategoriaRestController {
             List<Categoria> categorias = categoriaService.obtenerCategoriasPredefinidas();
             return ResponseEntity.ok(categorias);
         } catch (Exception e) {
+            logger.error("Error obteniendo categorias predefinidas", e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
@@ -71,6 +88,7 @@ public class CategoriaRestController {
             List<Categoria> categorias = categoriaService.obtenerCategoriasPersonalizadas();
             return ResponseEntity.ok(categorias);
         } catch (Exception e) {
+            logger.error("Error obteniendo categorias personalizadas", e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
@@ -84,6 +102,7 @@ public class CategoriaRestController {
             List<Categoria> categorias = categoriaService.obtenerCategoriasParaGastos();
             return ResponseEntity.ok(categorias);
         } catch (Exception e) {
+            logger.error("Error obteniendo categorias para gastos", e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
@@ -97,6 +116,7 @@ public class CategoriaRestController {
             List<Categoria> categorias = categoriaService.obtenerCategoriasParaIngresos();
             return ResponseEntity.ok(categorias);
         } catch (Exception e) {
+            logger.error("Error obteniendo categorias para ingresos", e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
@@ -105,16 +125,21 @@ public class CategoriaRestController {
      * Crea una nueva categoría
      */
     @PostMapping
-    public ResponseEntity<Categoria> crearCategoria(
-            @RequestParam String nombre,
-            @RequestParam(required = false) String descripcion) {
+    public ResponseEntity<?> crearCategoria(@RequestBody CategoriaRequest request) {
         try {
-            Categoria nuevaCategoria = categoriaService.crearCategoria(nombre, descripcion);
+            // Validar datos de entrada
+            if (request.getNombre() == null || request.getNombre().trim().isEmpty()) {
+                return ResponseEntity.badRequest().body(Map.of("error", "El nombre de la categoría es requerido"));
+            }
+            
+            Categoria nuevaCategoria = categoriaService.crearCategoria(request.getNombre(), request.getDescripcion());
             return ResponseEntity.status(HttpStatus.CREATED).body(nuevaCategoria);
         } catch (IllegalArgumentException e) {
-            return ResponseEntity.badRequest().build();
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+            logger.error("Error al crear categoria con payload: {}", request, e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(Map.of("error", "Error interno del servidor"));
         }
     }
     
@@ -127,6 +152,7 @@ public class CategoriaRestController {
             List<Categoria> categorias = categoriaService.buscarCategoriasPorTexto(q);
             return ResponseEntity.ok(categorias);
         } catch (Exception e) {
+            logger.error("Error buscando categorias con texto: {}", q, e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
@@ -140,6 +166,7 @@ public class CategoriaRestController {
             List<Categoria> categorias = categoriaService.obtenerCategoriasVacias();
             return ResponseEntity.ok(categorias);
         } catch (Exception e) {
+            logger.error("Error obteniendo categorias vacias", e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
@@ -153,6 +180,7 @@ public class CategoriaRestController {
             List<Categoria> categorias = categoriaService.obtenerCategoriasConMovimientos();
             return ResponseEntity.ok(categorias);
         } catch (Exception e) {
+            logger.error("Error obteniendo categorias con movimientos", e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
@@ -161,17 +189,29 @@ public class CategoriaRestController {
      * Actualiza una categoría
      */
     @PutMapping("/{id}")
-    public ResponseEntity<Categoria> actualizarCategoria(
+    public ResponseEntity<?> actualizarCategoria(
             @PathVariable Long id,
-            @RequestParam(required = false) String nombre,
-            @RequestParam(required = false) String descripcion) {
+            @RequestBody CategoriaRequest request) {
         try {
-            Categoria categoriaActualizada = categoriaService.actualizarCategoria(id, nombre, descripcion);
+            // Validar ID
+            if (id == null || id <= 0) {
+                return ResponseEntity.badRequest().body(Map.of("error", "ID de categoría inválido"));
+            }
+            
+            // Validar datos de entrada
+            if (request.getNombre() != null && request.getNombre().trim().isEmpty()) {
+                return ResponseEntity.badRequest().body(Map.of("error", "El nombre de la categoría no puede estar vacío"));
+            }
+            
+            Categoria categoriaActualizada = categoriaService.actualizarCategoria(
+                id, request.getNombre(), request.getDescripcion());
             return ResponseEntity.ok(categoriaActualizada);
         } catch (IllegalArgumentException e) {
-            return ResponseEntity.badRequest().build();
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+            logger.error("Error al actualizar categoria id={}", id, e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(Map.of("error", "Error interno del servidor"));
         }
     }
     
@@ -179,14 +219,21 @@ public class CategoriaRestController {
      * Elimina una categoría
      */
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> eliminarCategoria(@PathVariable Long id) {
+    public ResponseEntity<?> eliminarCategoria(@PathVariable Long id) {
         try {
+            // Validar ID
+            if (id == null || id <= 0) {
+                return ResponseEntity.badRequest().body(Map.of("error", "ID de categoría inválido"));
+            }
+            
             categoriaService.eliminarCategoria(id);
             return ResponseEntity.noContent().build();
         } catch (IllegalArgumentException e) {
-            return ResponseEntity.badRequest().build();
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+            logger.error("Error al eliminar categoria id={}", id, e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(Map.of("error", "Error interno del servidor: " + e.getMessage()));
         }
     }
 }

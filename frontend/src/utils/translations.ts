@@ -4,9 +4,9 @@ export const es = {
     nav: {
         dashboard: "Dashboard",
         movements: "Movimientos",
-        categories: "Categorías",
+        categories: "Categorias",
         reports: "Reportes",
-        settings: "Configuración",
+        settings: "Configuracion",
     },
 
     // Dashboard
@@ -38,13 +38,13 @@ export const es = {
         allTypes: "Todos los tipos",
         income: "Ingresos",
         expenses: "Gastos",
-        description: "Descripción",
+        description: "Descripcion",
         amount: "Monto",
         date: "Fecha",
         type: "Tipo",
-        category: "Categoría",
+        category: "Categoria",
         actions: "Acciones",
-        selectCategory: "Selecciona una categoría",
+        selectCategory: "Selecciona una categoria",
         saving: "Guardando...",
         update: "Actualizar",
         create: "Crear",
@@ -59,33 +59,33 @@ export const es = {
         listTitle: "Lista de Movimientos",
     },
 
-    // Categorías
+    // Categorias
     categories: {
-        title: "Categorías",
-        subtitle: "Organiza tus gastos e ingresos por categorías",
-        newCategory: "Nueva Categoría",
-        editCategory: "Editar Categoría",
-        search: "Buscar categorías...",
+        title: "Categorias",
+        subtitle: "Organiza tus gastos e ingresos por categorias",
+        newCategory: "Nueva Categoria",
+        editCategory: "Editar Categoria",
+        search: "Buscar categorias...",
         name: "Nombre",
-        description: "Descripción",
+        description: "Descripcion",
         saving: "Guardando...",
         update: "Actualizar",
         create: "Crear",
         cancel: "Cancelar",
-        deleteConfirm: "¿Estás seguro de que quieres eliminar esta categoría?",
-        noCategories: "No hay categorías registradas",
-        noFilteredCategories: "No se encontraron categorías con ese criterio",
-        createFirst: "Crear primera categoría",
-        loading: "Cargando categorías...",
-        namePlaceholder: "Ej: Alimentación, Transporte...",
-        descriptionPlaceholder: "Descripción opcional...",
+        deleteConfirm: "¿Estas seguro de que quieres eliminar esta categoria?",
+        noCategories: "No hay categorias registradas",
+        noFilteredCategories: "No se encontraron categorias con ese criterio",
+        createFirst: "Crear primera categoria",
+        loading: "Cargando categorias...",
+        namePlaceholder: "Ej: Alimentacion, Transporte...",
+        descriptionPlaceholder: "Descripcion opcional...",
         nameRequired: "Nombre *",
-        descriptionOptional: "Descripción",
+        descriptionOptional: "Descripcion",
     },
 
-    // Configuración
+    // Configuracion
     settings: {
-        title: "Configuración",
+        title: "Configuracion",
         subtitle: "Personaliza la aplicación según tus preferencias",
         saveChanges: "Guardar cambios",
         saving: "Guardando...",
@@ -98,7 +98,7 @@ export const es = {
         themeNote:
             "El tema se aplicará inmediatamente y se guardará para futuras sesiones",
 
-        regional: "Configuración Regional",
+        regional: "Configuracion Regional",
         currency: "Moneda predeterminada",
         currencyNote: "Se usará para mostrar todos los importes monetarios",
         language: "Idioma de la interfaz",
@@ -134,7 +134,7 @@ export const es = {
         currentTheme: "Tema:",
 
         resetDefault: "Restablecer por defecto",
-        saveSettings: "Guardar configuración",
+        saveSettings: "Guardar configuracion",
     },
 
     // Reportes
@@ -146,7 +146,7 @@ export const es = {
         year: "Año",
         totalExpenses: "Total de Gastos",
         noData: "No hay datos para mostrar",
-        categoryBreakdown: "Desglose por categorías",
+        categoryBreakdown: "Desglose por categorias",
         monthlyTrend: "Tendencia mensual",
     },
     common: {

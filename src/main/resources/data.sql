@@ -1,8 +1,8 @@
--- Script de inicialización de datos para el Gestor de Compras Personales
--- Se ejecuta automáticamente al iniciar la aplicación
--- Usando caracteres sin acentos para evitar problemas de codificación
+-- Script de inicializacion de datos para el Gestor de Compras Personales
+-- Se ejecuta automaticamente al iniciar la aplicacion
+-- Usando caracteres sin acentos para evitar problemas de codificacion
 
--- Insertar categorías predefinidas si no existen
+-- Insertar categorias predefinidas si no existen
 INSERT INTO categoria (nombre, descripcion, es_predefinida) 
 SELECT 'Alimentacion', 'Gastos relacionados con comida y bebida', true
 WHERE NOT EXISTS (SELECT 1 FROM categoria WHERE nombre = 'Alimentacion');
@@ -59,3 +59,9 @@ WHERE NOT EXISTS (SELECT 1 FROM categoria WHERE nombre = 'Negocios');
 INSERT INTO categoria (nombre, descripcion, es_predefinida) 
 SELECT 'Otros Ingresos', 'Otros tipos de ingresos', true
 WHERE NOT EXISTS (SELECT 1 FROM categoria WHERE nombre = 'Otros Ingresos');
+
+-- Usuario por defecto para testing
+-- Password: admin123 (hasheado con BCrypt)
+INSERT INTO usuario (username, email, password_hash, nombre_completo, activo)
+SELECT 'admin', 'admin@test.com', '$2a$10$N9qo8uLOickgx2ZMRZoMyO8kvHxGqY2W9O91i5KKdHYLJH1LM6eu2', 'Usuario Admin', true
+WHERE NOT EXISTS (SELECT 1 FROM usuario WHERE username = 'admin');

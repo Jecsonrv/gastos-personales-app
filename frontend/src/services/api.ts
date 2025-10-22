@@ -171,6 +171,7 @@ class ApiService {
                 "Content-Type": "application/json",
                 Accept: "application/json",
             },
+            withCredentials: true, // Important for session cookies
         });
 
         this.setupInterceptors();
@@ -191,7 +192,7 @@ class ApiService {
             }
         );
 
-        // Response interceptor - avoid verbose response logs
+        // Response interceptor - handle authentication errors
         this.client.interceptors.response.use(
             (response) => {
                 return response;
@@ -199,6 +200,20 @@ class ApiService {
             (error) => {
                 console.error("❌ Response Error:", error);
                 const status = error.response?.status;
+                
+                // Handle authentication errors only for specific endpoints
+                if (status === 401) {
+                    // Only clear session and redirect if it's a session validation error
+                    const url = error.config?.url || '';
+                    if (url.includes('/auth/session') || url.includes('/auth/validate')) {
+                        localStorage.removeItem('auth-user');
+                        // Redirect to login if not already there
+                        if (window.location.pathname !== '/login') {
+                            window.location.href = '/login';
+                        }
+                    }
+                }
+                
                 const message =
                     error.response?.data?.message ||
                     error.message ||
@@ -236,7 +251,7 @@ class ApiService {
         movimiento: MovimientoCreateDTO
     ): Promise<Movimiento> {
         if (!movimiento.descripcion?.trim()) {
-            throw new ApiError("Descripción is required");
+            throw new ApiError("Descripcion is required");
         }
         if (!movimiento.monto || movimiento.monto <= 0) {
             throw new ApiError("Monto must be greater than 0");
@@ -250,15 +265,16 @@ class ApiService {
                 ? `${API_ENDPOINTS.MOVIMIENTOS}/ingresos`
                 : `${API_ENDPOINTS.MOVIMIENTOS}/gastos`;
 
-        const params = buildParams({
+        const requestBody = {
             descripcion: movimiento.descripcion.trim(),
             monto: movimiento.monto,
+            tipo: movimiento.tipo,
             categoriaId: movimiento.categoriaId,
-        });
+        };
 
         try {
             const response: AxiosResponse<MovimientoRawDTO> =
-                await this.client.post(endpoint, undefined, { params });
+                await this.client.post(endpoint, requestBody);
             return mapMovimientoDto(response.data);
         } catch (error) {
             throw error instanceof ApiError
@@ -277,19 +293,19 @@ class ApiService {
             throw new ApiError("Valid movimiento ID is required");
         }
 
-        const params = buildParams({
+        const requestBody = {
             descripcion: movimiento.descripcion?.trim(),
             monto: movimiento.monto,
+            tipo: (movimiento as unknown as Record<string, unknown>).tipo || "GASTO",
             categoriaId: (movimiento as unknown as Record<string, unknown>)
                 .categoriaId,
-        });
+        };
 
         try {
             const response: AxiosResponse<MovimientoRawDTO> =
                 await this.client.put(
                     `${API_ENDPOINTS.MOVIMIENTOS}/${movimiento.id}`,
-                    undefined,
-                    { params }
+                    requestBody
                 );
             return mapMovimientoDto(response.data);
         } catch (error) {
@@ -373,7 +389,7 @@ class ApiService {
         }
     }
 
-    // CATEGORÍAS METHODS
+    // CATEGORIAS METHODS
 
     /**
      * Get all categorias
@@ -448,56 +464,23 @@ class ApiService {
             throw new ApiError("Valid categoria ID is required");
         }
 
-        const params = buildParams({
-            nombre: categoria.nombre
-                ? String(categoria.nombre).trim()
-                : undefined,
-            descripcion: categoria.descripcion
-                ? String(categoria.descripcion).trim()
-                : undefined,
-        });
+        const requestBody: Record<string, unknown> = {};
+
+        if (categoria.nombre && categoria.nombre.trim()) {
+            requestBody.nombre = categoria.nombre.trim();
+        }
+
+        if (categoria.descripcion !== undefined) {
+            requestBody.descripcion = categoria.descripcion?.trim() || "";
+        }
 
         try {
-            console.debug("[api] updateCategoria -> sending PUT", {
-                url: `${API_ENDPOINTS.CATEGORIAS}/${categoria.id}`,
-                params,
-            });
             const response: AxiosResponse<Categoria> = await this.client.put(
                 `${API_ENDPOINTS.CATEGORIAS}/${categoria.id}`,
-                undefined,
-                { params }
+                requestBody
             );
-            console.debug("[api] updateCategoria -> response", {
-                status: response.status,
-                data: response.data,
-            });
             return response.data;
         } catch (error) {
-            // log detailed error info for debugging in devtools
-            try {
-                if (error instanceof ApiError) {
-                    type AxiosErrorLike = {
-                        response?: { status?: number; data?: unknown };
-                        config?: unknown;
-                    };
-                    const orig =
-                        error.originalError as unknown as AxiosErrorLike;
-                    console.error("[api] updateCategoria -> ApiError", {
-                        message: error.message,
-                        apiErrorStatus: error.status,
-                        originalResponseStatus: orig?.response?.status,
-                        originalResponseData: orig?.response?.data,
-                        originalConfig: orig?.config,
-                    });
-                } else {
-                    console.error("[api] updateCategoria -> error", error);
-                }
-            } catch {
-                console.error(
-                    "[api] updateCategoria -> error (no details)",
-                    error
-                );
-            }
             throw error instanceof ApiError
                 ? error
                 : new ApiError("Failed to update categoria", undefined, error);
@@ -591,7 +574,7 @@ class ApiService {
             > = {};
 
             movimientos.forEach((m) => {
-                const nombre = m.categoria?.nombre || "Sin categoría";
+                const nombre = m.categoria?.nombre || "Sin categoria";
                 const key = nombre;
                 if (!mapByCategoria[key]) {
                     mapByCategoria[key] = {

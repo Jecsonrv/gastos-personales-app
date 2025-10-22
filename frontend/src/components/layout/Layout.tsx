@@ -1,10 +1,21 @@
 import { Outlet, Link, useLocation } from "react-router-dom";
 import { cn } from "../../utils";
 import { useTranslation } from "../../hooks/useTranslation";
+import { useAuth } from "../../contexts/AuthContext";
+import { Button } from "../ui/Button";
 
 export function Layout() {
     const location = useLocation();
     const { t } = useTranslation();
+    const { user, logout } = useAuth();
+
+    const handleLogout = async () => {
+        try {
+            await logout();
+        } catch (error) {
+            console.error("Logout error:", error);
+        }
+    };
 
     const navigation = [
         {
@@ -173,6 +184,58 @@ export function Layout() {
                             );
                         })}
                     </nav>
+
+                    {/* User section */}
+                    <div className="flex-shrink-0 px-4 py-4 border-t border-border">
+                        <div className="flex items-center justify-between">
+                            <div className="flex items-center min-w-0 flex-1">
+                                <div className="bg-primary/10 rounded-full p-2 mr-3">
+                                    <svg
+                                        className="h-5 w-5 text-primary"
+                                        fill="none"
+                                        viewBox="0 0 24 24"
+                                        stroke="currentColor"
+                                    >
+                                        <path
+                                            strokeLinecap="round"
+                                            strokeLinejoin="round"
+                                            strokeWidth={2}
+                                            d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+                                        />
+                                    </svg>
+                                </div>
+                                <div className="min-w-0 flex-1">
+                                    <p className="text-sm font-medium text-card-foreground truncate">
+                                        {user?.nombreUsuario}
+                                    </p>
+                                    <p className="text-xs text-muted-foreground truncate">
+                                        {user?.email}
+                                    </p>
+                                </div>
+                            </div>
+                            <Button
+                                onClick={handleLogout}
+                                variant="ghost"
+                                size="sm"
+                                className="ml-2 text-muted-foreground hover:text-destructive"
+                                title="Cerrar Sesión"
+                            >
+                                <svg
+                                    className="h-4 w-4"
+                                    fill="none"
+                                    viewBox="0 0 24 24"
+                                    stroke="currentColor"
+                                >
+                                    <path
+                                        strokeLinecap="round"
+                                        strokeLinejoin="round"
+                                        strokeWidth={2}
+                                        d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"
+                                    />
+                                </svg>
+                            </Button>
+                        </div>
+                    </div>
                 </div>
             </div>
 
