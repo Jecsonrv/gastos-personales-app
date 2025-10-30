@@ -1,0 +1,47 @@
+%PDF-1.4
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Kids [3 0 R] /Count 1 >>
+endobj
+3 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Contents 4 0 R /Resources << /Font << /F1 5 0 R >> >> >>
+endobj
+4 0 obj
+<< /Length 1062 >>
+stream
+BT
+/F1 18 Tf
+72 780 Td
+(Frontend de Fine - Guía de Pitch) Tj
+/F1 12 Tf
+0 -22 Td (Objetivo: vender una experiencia de control financiero personal clara y humana.) Tj
+0 -22 Td (Inicio impactante: pregunta cuántos pesos se evaporaron sin que lo notaras esta semana.) Tj
+0 -22 Td (Transición: presenta Fine como copiloto financiero que organiza gastos en un panel amigable.) Tj
+0 -22 Td (Demostración rápida: recorre el Dashboard destacando tarjetas con ingresos, gastos y balance en vivo.) Tj
+0 -22 Td (Resalta visuales: gráfica lineal mensual para mostrar tendencias y decisiones.) Tj
+0 -22 Td (Enfatiza confianza: autenticación privada, toasts informativos y rutas seguras en App.tsx.) Tj
+0 -22 Td (Personalización: tema adaptable con ThemeProvider y configuración localizable.) Tj
+0 -22 Td (Valor humano: lenguaje cercano y la historia de un estudiante que logra ahorrar.) Tj
+0 -22 Td (Cierre: call to action para probar el tablero en vivo con la clase.) Tj
+0 -22 Td (Backup: domina preguntas sobre arquitectura modular y reutilización de componentes UI.) Tj
+ET
+endstream
+endobj
+5 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
+endobj
+xref
+0 6
+0000000000 65535 f 
+0000000009 00000 n 
+0000000058 00000 n 
+0000000115 00000 n 
+0000000241 00000 n 
+0000001354 00000 n 
+trailer
+<< /Size 6 /Root 1 0 R >>
+startxref
+1424
+%%EOF

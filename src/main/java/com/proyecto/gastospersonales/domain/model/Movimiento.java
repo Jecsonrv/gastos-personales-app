@@ -5,6 +5,7 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Objects;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 
 import jakarta.persistence.Column;
@@ -64,18 +65,24 @@ public class Movimiento {
     @JoinColumn(name = "categoria_id", nullable = false)
     @JsonManagedReference
     private Categoria categoria;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "usuario_id")
+    @JsonBackReference
+    private Usuario usuario;
     
     // Constructores
     public Movimiento() {
-        this.fecha = LocalDateTime.now();
+        // Default constructor required by JPA and Jackson
     }
-    
-    public Movimiento(String descripcion, BigDecimal monto, TipoMovimiento tipo, Categoria categoria) {
+
+    public Movimiento(String descripcion, BigDecimal monto, TipoMovimiento tipo, Categoria categoria, Usuario usuario, LocalDateTime fecha) {
         this.descripcion = descripcion;
         this.monto = monto;
         this.tipo = tipo;
         this.categoria = categoria;
-        this.fecha = LocalDateTime.now();
+        this.usuario = usuario;
+        this.fecha = fecha;
     }
     
     public Movimiento(String descripcion, BigDecimal monto, TipoMovimiento tipo, Categoria categoria, LocalDateTime fecha) {
@@ -133,6 +140,14 @@ public class Movimiento {
     
     public void setCategoria(Categoria categoria) {
         this.categoria = categoria;
+    }
+
+    public Usuario getUsuario() {
+        return usuario;
+    }
+
+    public void setUsuario(Usuario usuario) {
+        this.usuario = usuario;
     }
     
     // Métodos de utilidad

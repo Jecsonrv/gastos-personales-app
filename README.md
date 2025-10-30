@@ -1,130 +1,302 @@
-# Gestor de Gastos Personales
+# Fine - Gestión de Finanzas Personales
 
-Aplicación para el registro y seguimiento de ingresos y gastos personales. Esta guía explica cómo configurar, compilar y ejecutar el proyecto (backend Java/Spring Boot y frontend React + Vite).
+Fine es una aplicación moderna y simple para gestionar tus finanzas personales. Registra ingresos y gastos, crea categorías personalizadas y visualiza reportes detallados de tu economía.
 
-## Resumen
+**Desarrollado con Spring Boot (backend) y React + TypeScript (frontend) con autenticación de usuarios.**
 
--   Backend: Java 17+, Spring Boot (Maven). El código fuente está en `src/main/java`.
--   Frontend: React + TypeScript + Vite, en la carpeta `frontend/`.
--   Base de datos: PostgreSQL (se incluye un archivo `src/main/resources/data.sql` para datos de ejemplo).
+## Tecnologías Utilizadas
 
-## Tecnologías
+### Backend
+- Java 17
+- Spring Boot 3.2.0
+- Spring Data JPA
+- PostgreSQL
+- Maven
 
--   Java 17+
--   Spring Boot
--   Maven (incluye wrapper `mvnw` / `mvnw.cmd`)
--   PostgreSQL
--   Node.js + npm
--   Vite + React + TypeScript
+### Frontend
+- React 19.1.1
+- TypeScript 5.8.3
+- Vite 7.1.7
+- TailwindCSS 4.1.13
+- TanStack Query 5.90.2
+- Axios 1.12.2
 
-## Requisitos previos
+## Requisitos Previos
 
-Instala las siguientes herramientas en tu sistema:
+Antes de ejecutar el proyecto, asegúrate de tener instalado:
 
--   Java JDK 17 o superior
--   PostgreSQL 14/15+
--   Node.js (LTS) y npm
--   Git
+1. **Java Development Kit (JDK) 17 o superior**
+   - Verificar: `java -version`
+   - Descargar: https://www.oracle.com/java/technologies/downloads/
 
-En Windows, los comandos de ejemplo usan PowerShell y `mvnw.cmd`.
+2. **PostgreSQL 12 o superior**
+   - Verificar: `psql --version`
+   - Descargar: https://www.postgresql.org/download/
 
-## Configuración de la base de datos (PostgreSQL)
+3. **Node.js 18 o superior**
+   - Verificar: `node --version`
+   - Descargar: https://nodejs.org/
 
-1.  Crear la base de datos y un usuario (ajusta nombre/contraseña según tus políticas):
+4. **npm 9 o superior** (incluido con Node.js)
+   - Verificar: `npm --version`
+
+## Instalación
+
+### 1. Clonar el Repositorio
+
+```bash
+git clone <url-del-repositorio>
+cd Proyecto
+```
+
+### 2. Configurar la Base de Datos
+
+#### 2.1. Crear la Base de Datos
+
+Abre PostgreSQL y ejecuta:
 
 ```sql
 CREATE DATABASE gastos_personales;
+```
+
+#### 2.2. Crear el Usuario
+
+```sql
 CREATE USER gastos_user WITH PASSWORD 'gastos123';
 GRANT ALL PRIVILEGES ON DATABASE gastos_personales TO gastos_user;
 ```
 
-2.  Opcional: ejecutar `src/main/resources/data.sql` para insertar datos de ejemplo.
+#### 2.3. Ejecutar el Script de Inicialización (Opcional)
 
-## Variables de configuración
+Si existe el archivo `setup-database.sql`, ejecútalo:
 
-El proyecto usa `src/main/resources/application.properties` para la configuración de la conexión a la base de datos. Valores típicos:
+```bash
+psql -U gastos_user -d gastos_personales -f setup-database.sql
+```
+
+### 3. Configurar el Backend
+
+#### 3.1. Verificar Configuración
+
+Abre el archivo `src/main/resources/application.properties` y verifica:
 
 ```properties
 spring.datasource.url=jdbc:postgresql://localhost:5432/gastos_personales
 spring.datasource.username=gastos_user
 spring.datasource.password=gastos123
+spring.jpa.hibernate.ddl-auto=update
 server.port=8080
 ```
 
-Si prefieres usar variables de entorno, puedes modificar `application.properties` o usar perfiles.
-
-## Guía rápida: compilar y ejecutar (Windows PowerShell)
-
-A continuación se muestran pasos mínimos para levantar backend y frontend en entorno de desarrollo.
-
-### Backend (Java / Spring Boot)
+#### 3.2. Compilar el Proyecto
 
 Desde la raíz del proyecto:
 
-```powershell
-# Compilar (usar wrapper que está incluido)
-.\\mvnw.cmd clean package -DskipTests
-
-# Ejecutar la aplicación (usando wrapper)
-.\\mvnw.cmd spring-boot:run
-
-# O ejecutar el JAR generado
-java -jar target/gastos-personales-1.0.0.jar
+**En Windows:**
+```bash
+mvnw.cmd clean install
 ```
 
-Notas:
+**En Linux/Mac:**
+```bash
+./mvnw clean install
+```
 
--   Si tienes Maven instalado globalmente puedes usar `mvn clean package`.
--   Para cambiar el puerto modifica `server.port` en `application.properties`.
+O si tienes Maven instalado globalmente:
+```bash
+mvn clean install
+```
 
-### Frontend (Desarrollo y Build)
+### 4. Configurar el Frontend
 
-Entrar a la carpeta del frontend y ejecutar:
+#### 4.1. Instalar Dependencias
 
-```powershell
+```bash
 cd frontend
 npm install
-npm run dev      # Levanta el servidor de desarrollo (Vite)
-# Para generar build de producción
+```
+
+## Ejecución
+
+### Opción 1: Ejecutar Todo Manualmente
+
+#### 1. Iniciar el Backend
+
+Desde la raíz del proyecto:
+
+**En Windows:**
+```bash
+mvnw.cmd spring-boot:run
+```
+
+**En Linux/Mac:**
+```bash
+./mvnw spring-boot:run
+```
+
+El backend estará disponible en: `http://localhost:8080`
+
+#### 2. Iniciar el Frontend
+
+En otra terminal, desde la carpeta `frontend`:
+
+```bash
+npm run dev
+```
+
+El frontend estará disponible en: `http://localhost:5173`
+
+### Opción 2: Usar Scripts de Automatización (Windows)
+
+Si estás en Windows, puedes usar los scripts incluidos:
+
+#### 1. Compilar:
+```bash
+compilar.bat
+```
+
+#### 2. Ejecutar:
+```bash
+ejecutar.bat
+```
+
+## Estructura del Proyecto
+
+```
+Proyecto/
+├── src/main/java/com/proyecto/gastospersonales/
+│   ├── application/           # Lógica de aplicación
+│   ├── domain/                # Modelos y servicios
+│   ├── infrastructure/        # Repositorios y configuración
+│   └── interfaz/              # Controladores REST
+├── frontend/
+│   ├── src/
+│   │   ├── components/        # Componentes React
+│   │   ├── pages/             # Páginas principales
+│   │   ├── hooks/             # Hooks personalizados
+│   │   ├── services/          # Servicios API
+│   │   ├── types/             # Tipos TypeScript
+│   │   └── utils/             # Utilidades
+│   ├── package.json
+│   └── vite.config.ts
+├── pom.xml
+└── README.md
+```
+
+## Endpoints de la API
+
+### Categorías
+
+- `GET /api/categorias` - Obtener todas las categorías
+- `GET /api/categorias/{id}` - Obtener categoría por ID
+- `POST /api/categorias` - Crear nueva categoría
+- `PUT /api/categorias/{id}` - Actualizar categoría
+- `DELETE /api/categorias/{id}` - Eliminar categoría
+
+### Movimientos
+
+- `GET /api/movimientos` - Obtener todos los movimientos
+- `GET /api/movimientos/{id}` - Obtener movimiento por ID
+- `POST /api/movimientos/ingresos` - Crear ingreso
+- `POST /api/movimientos/gastos` - Crear gasto
+- `PUT /api/movimientos/{id}` - Actualizar movimiento
+- `DELETE /api/movimientos/{id}` - Eliminar movimiento
+- `GET /api/movimientos/estadisticas` - Obtener estadísticas
+
+## Solución de Problemas
+
+### Error: "Puerto 8080 ya está en uso"
+
+Cambia el puerto en `application.properties`:
+```properties
+server.port=8081
+```
+
+Y actualiza la URL en el frontend (`frontend/src/constants/index.ts`):
+```typescript
+export const API_BASE_URL = "http://localhost:8081";
+```
+
+### Error: "No se puede conectar a PostgreSQL"
+
+1. Verifica que PostgreSQL esté ejecutándose:
+   ```bash
+   # Windows
+   net start postgresql-x64-14
+
+   # Linux
+   sudo systemctl status postgresql
+   ```
+
+2. Verifica las credenciales en `application.properties`
+
+### Error: "Module not found" en Frontend
+
+Limpia e instala de nuevo las dependencias:
+```bash
+cd frontend
+rm -rf node_modules package-lock.json
+npm install
+```
+
+## Funcionalidades
+
+- Gestión de categorías (crear, editar, eliminar)
+- Registro de ingresos y gastos
+- Dashboard con resumen financiero
+- Reportes y estadísticas
+- Filtros y búsqueda
+- Configuración de moneda y formato de fecha
+- Modo claro/oscuro
+
+## Datos de Prueba
+
+Al iniciar la aplicación por primera vez, se crearán automáticamente categorías predefinidas:
+
+**Categorías de Gastos:**
+- Alimentación, Transporte, Entretenimiento, Salud, Educación, Servicios, Ropa, Hogar, Tecnología, Otros
+
+**Categorías de Ingresos:**
+- Salario, Inversiones, Negocios, Otros Ingresos
+
+## Comandos Útiles
+
+### Backend
+
+```bash
+# Compilar sin ejecutar tests
+mvnw clean install -DskipTests
+
+# Ejecutar tests
+mvnw test
+
+# Limpiar y compilar
+mvnw clean package
+```
+
+### Frontend
+
+```bash
+# Modo desarrollo
+npm run dev
+
+# Build para producción
 npm run build
+
+# Preview del build
+npm run preview
+
+# Linter
+npm run lint
 ```
 
-El frontend, en modo desarrollo, estará disponible típicamente en `http://localhost:5173` (Vite).
+## Notas Adicionales
 
-## Uso básico
+- El backend usa Hibernate con `ddl-auto=update`, por lo que creará automáticamente las tablas necesarias
+- Los datos de ejemplo se inicializan automáticamente en el primer arranque
+- El frontend tiene caché de datos mediante TanStack Query para mejor rendimiento
+- Se recomienda usar Chrome o Firefox para mejor compatibilidad
 
--   API REST: el backend expone endpoints bajo `http://localhost:8080` (revisa los controladores en `src/main/java/.../interfaz/web`).
--   Frontend: si ejecutas `npm run dev`, abre el navegador en la URL que indique Vite; para producción sirve la carpeta `frontend/dist` detrás del backend o desde un servidor estático.
+## Licencia
 
-## Ejecutar pruebas
-
--   Backend (maven):
-
-```powershell
-.\\mvnw.cmd test
-```
-
--   Frontend: si hay tests configurados (Jest/Vite), usar `npm test` desde `frontend/`.
-
-## Control de versiones y buenas prácticas
-
--   Antes de subir cambios, ejecuta `mvnw.cmd clean package` y `npm run build` para comprobar que el proyecto compila.
--   No subas credenciales ni archivos sensibles. Revisa `.gitignore` y evita incluir archivos como `.env`, keystores, `node_modules/` o `frontend/dist`.
-
-## Estructura del proyecto (resumen)
-
-```
-/ (raíz)
-├─ src/main/java/...      # Backend Java
-├─ src/main/resources     # application.properties, data.sql
-├─ frontend/              # Frontend (Vite + React)
-├─ pom.xml                # Configuración Maven
-├─ mvnw, mvnw.cmd         # Maven wrapper
-└─ README.md              # Este archivo
-```
-
-## Troubleshooting (problemas comunes)
-
--   Error de conexión a la DB: verifica que PostgreSQL esté en ejecución y que los parámetros de `application.properties` sean correctos.
--   Puerto en uso (8080): cambia `server.port` en `application.properties` o termina el proceso que ocupa el puerto.
--   Problemas con dependencias Node: elimina `node_modules/` y vuelve a `npm install`.
+Este proyecto es parte de un trabajo académico.

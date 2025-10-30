@@ -6,9 +6,11 @@ import {
     CardTitle,
     PageLoader,
 } from "../components/ui";
+import { useToast } from "../components/ui/Toast";
 import { Button } from "../components/ui/Button";
 import { Input } from "../components/ui/Input";
 import { Plus, Search, Edit2, Trash2, Tag, FolderPlus } from "lucide-react";
+import Portal from "../components/ui/Portal";
 import {
     useCategorias,
     useCreateCategoria,
@@ -25,6 +27,7 @@ interface CategoriaFormData {
 
 export function Categorias() {
     const { t } = useTranslation();
+    const { addToast } = useToast();
     const [isFormVisible, setIsFormVisible] = useState(false);
     const [editingCategoria, setEditingCategoria] = useState<Categoria | null>(
         null
@@ -76,8 +79,12 @@ export function Categorias() {
                 await createCategoria.mutateAsync(categoriaData);
             }
             resetForm();
-        } catch (error) {
-            console.error("Error al guardar categoría:", error);
+            addToast("Categoría guardada exitosamente", "success");
+        } catch (error: any) {
+            const errorMessage =
+                error.response?.data?.message ||
+                "Error al guardar categoría. Por favor intente nuevamente.";
+            addToast(errorMessage, "error");
         }
     };
 
@@ -109,8 +116,12 @@ export function Categorias() {
         if (window.confirm(message)) {
             try {
                 await deleteCategoria.mutateAsync(id);
-            } catch (error) {
-                console.error("Error al eliminar categoría:", error);
+                addToast("Categoría eliminada exitosamente", "success");
+            } catch (error: any) {
+                const errorMessage =
+                    error.response?.data?.message ||
+                    "Error al eliminar categoría. Puede que tenga movimientos asociados.";
+                addToast(errorMessage, "error");
             }
         }
     };
@@ -234,85 +245,92 @@ export function Categorias() {
 
             {/* Formulario Modal */}
             {isFormVisible && (
-                <div className="fixed inset-0 bg-background/80 backdrop-blur-sm flex items-center justify-center z-50">
-                    <Card className="max-w-md w-full mx-4">
-                        <CardHeader>
-                            <CardTitle>
-                                {editingCategoria
-                                    ? t("categories.editCategory")
-                                    : t("categories.newCategory")}
-                            </CardTitle>
-                        </CardHeader>
-                        <CardContent>
-                            <form onSubmit={handleSubmit} className="space-y-4">
-                                <div>
-                                    <label className="block text-sm font-medium text-foreground mb-2">
-                                        {t("categories.nameRequired")}
-                                    </label>
-                                    <Input
-                                        type="text"
-                                        value={formData.nombre}
-                                        onChange={(e) =>
-                                            setFormData({
-                                                ...formData,
-                                                nombre: e.target.value,
-                                            })
-                                        }
-                                        placeholder={t(
-                                            "categories.namePlaceholder"
-                                        )}
-                                        required
-                                    />
-                                </div>
+                <Portal>
+                    <div className="fixed inset-0 bg-background/80 backdrop-blur-sm flex items-center justify-center z-50">
+                        <Card className="max-w-md w-full mx-4">
+                            <CardHeader>
+                                <CardTitle>
+                                    {editingCategoria
+                                        ? t("categories.editCategory")
+                                        : t("categories.newCategory")}
+                                </CardTitle>
+                            </CardHeader>
+                            <CardContent>
+                                <form
+                                    onSubmit={handleSubmit}
+                                    className="space-y-4"
+                                >
+                                    <div>
+                                        <label className="block text-sm font-medium text-foreground mb-2">
+                                            {t("categories.nameRequired")}
+                                        </label>
+                                        <Input
+                                            type="text"
+                                            value={formData.nombre}
+                                            onChange={(e) =>
+                                                setFormData({
+                                                    ...formData,
+                                                    nombre: e.target.value,
+                                                })
+                                            }
+                                            placeholder={t(
+                                                "categories.namePlaceholder"
+                                            )}
+                                            required
+                                        />
+                                    </div>
 
-                                <div>
-                                    <label className="block text-sm font-medium text-foreground mb-2">
-                                        {t("categories.descriptionOptional")}
-                                    </label>
-                                    <Input
-                                        type="text"
-                                        value={formData.descripcion}
-                                        onChange={(e) =>
-                                            setFormData({
-                                                ...formData,
-                                                descripcion: e.target.value,
-                                            })
-                                        }
-                                        placeholder={t(
-                                            "categories.descriptionPlaceholder"
-                                        )}
-                                    />
-                                </div>
+                                    <div>
+                                        <label className="block text-sm font-medium text-foreground mb-2">
+                                            {t(
+                                                "categories.descriptionOptional"
+                                            )}
+                                        </label>
+                                        <Input
+                                            type="text"
+                                            value={formData.descripcion}
+                                            onChange={(e) =>
+                                                setFormData({
+                                                    ...formData,
+                                                    descripcion: e.target.value,
+                                                })
+                                            }
+                                            placeholder={t(
+                                                "categories.descriptionPlaceholder"
+                                            )}
+                                        />
+                                    </div>
 
-                                <div className="flex space-x-3 pt-4">
-                                    <Button
-                                        type="submit"
-                                        className="flex-1"
-                                        disabled={
-                                            createCategoria.isPending ||
+                                    <div className="flex space-x-3 pt-4">
+                                        <Button
+                                            type="submit"
+                                            className="flex-1"
+                                            disabled={
+                                                createCategoria.isPending ||
+                                                updateCategoria.isPending
+                                            }
+                                        >
+                                            {createCategoria.isPending ||
                                             updateCategoria.isPending
-                                        }
-                                    >
-                                        {createCategoria.isPending ||
-                                        updateCategoria.isPending
-                                            ? t("categories.saving")
-                                            : editingCategoria
-                                            ? t("categories.update")
-                                            : t("categories.create")}
-                                    </Button>
-                                    <Button
-                                        type="button"
-                                        variant="outline"
-                                        onClick={resetForm}
-                                        className="flex-1"
-                                    >
-                                        {t("categories.cancel")}
-                                    </Button>
-                                </div>
-                            </form>
-                        </CardContent>
-                    </Card>
-                </div>
+                                                ? t("categories.saving")
+                                                : editingCategoria
+                                                ? t("categories.update")
+                                                : t("categories.create")}
+                                        </Button>
+                                        <Button
+                                            type="button"
+                                            variant="outline"
+                                            onClick={resetForm}
+                                            className="flex-1"
+                                        >
+                                            {t("categories.cancel")}
+                                        </Button>
+                                    </div>
+                                </form>
+                            </CardContent>
+                        </Card>
+                    </div>
+                </Portal>
             )}
         </div>
     );

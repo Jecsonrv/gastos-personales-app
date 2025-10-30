@@ -1,15 +1,18 @@
 import { Outlet, Link, useLocation } from "react-router-dom";
 import { cn } from "../../utils";
 import { useTranslation } from "../../hooks/useTranslation";
+import { LogOut, User } from "lucide-react";
+import { useAuth } from "../../hooks/useAuth";
 
 export function Layout() {
     const location = useLocation();
     const { t } = useTranslation();
+    const { logout, user } = useAuth();
 
     const navigation = [
         {
             name: t("nav.dashboard"),
-            href: "/dashboard",
+            href: "/",
             icon: (
                 <svg
                     className="h-5 w-5"
@@ -134,12 +137,12 @@ export function Layout() {
                                         strokeLinecap="round"
                                         strokeLinejoin="round"
                                         strokeWidth={2}
-                                        d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"
+                                        d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
                                     />
                                 </svg>
                             </div>
                             <h1 className="text-xl font-bold text-card-foreground">
-                                {t("common.appTitle")}
+                                Fine
                             </h1>
                         </div>
                     </div>
@@ -173,6 +176,25 @@ export function Layout() {
                             );
                         })}
                     </nav>
+                    <div className="mt-auto border-t border-border pt-4">
+                        <div className="px-4 py-2 text-sm text-muted-foreground">
+                            {user?.nombre || user?.username}
+                        </div>
+                        <Link
+                            to="/perfil"
+                            className="w-full flex items-center space-x-3 px-4 py-3 hover:bg-accent rounded-lg transition-colors text-left"
+                        >
+                            <User className="w-5 h-5" />
+                            <span>Mi Perfil</span>
+                        </Link>
+                        <button
+                            onClick={logout}
+                            className="w-full flex items-center space-x-3 px-4 py-3 hover:bg-accent rounded-lg transition-colors text-left"
+                        >
+                            <LogOut className="w-5 h-5" />
+                            <span>Cerrar Sesión</span>
+                        </button>
+                    </div>
                 </div>
             </div>
 

@@ -2,9 +2,11 @@ package com.proyecto.gastospersonales.application.service;
 
 import com.proyecto.gastospersonales.domain.model.Categoria;
 import com.proyecto.gastospersonales.domain.service.CategoriaService;
+import com.proyecto.gastospersonales.domain.service.MovimientoService;
 import com.proyecto.gastospersonales.infrastructure.repository.CategoriaRepositoryInterface;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
@@ -18,9 +20,15 @@ import java.util.stream.Collectors;
 @Service
 @Transactional
 public class CategoriaServiceImpl implements CategoriaService {
-    
+
+    private final CategoriaRepositoryInterface categoriaRepository;
+    private final MovimientoService movimientoService;
+
     @Autowired
-    private CategoriaRepositoryInterface categoriaRepository;
+    public CategoriaServiceImpl(CategoriaRepositoryInterface categoriaRepository, @Lazy MovimientoService movimientoService) {
+        this.categoriaRepository = categoriaRepository;
+        this.movimientoService = movimientoService;
+    }
     
     /**
      * Obtiene todas las categorías ordenadas por nombre
@@ -115,17 +123,16 @@ public class CategoriaServiceImpl implements CategoriaService {
      * Elimina una categoría si no tiene movimientos asociados
      */
     @Override
-    public void eliminarCategoria(Long id) {
+    public void eliminarCategoria(Long id, Long userId) {
         Categoria categoria = categoriaRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Categoría no encontrada con ID: " + id));
         
-        // Validar que no tenga movimientos asociados
-        if (categoria.getCantidadMovimientos() > 0) {
-            throw new IllegalArgumentException("No se puede eliminar la categoría '" + categoria.getNombre() + 
-                    "' porque tiene " + categoria.getCantidadMovimientos() + " movimientos asociados");
+        // Check if there are any movements associated with this category for this user
+        if (movimientoService.obtenerMovimientosPorCategoria(id, userId).isEmpty()) {
+            categoriaRepository.delete(categoria);
+        } else {
+            throw new IllegalArgumentException("No se puede eliminar la categoría porque tiene movimientos asociados.");
         }
-        
-        categoriaRepository.delete(categoria);
     }
     
     /**

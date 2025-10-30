@@ -1,0 +1,30 @@
+@startuml diagrama_clases
+package domain {
+  class Movimiento {
+    +id : Long
+    +descripcion : String
+    +monto : BigDecimal
+    +fecha : LocalDateTime
+    +tipo : TipoMovimiento
+    +categoria : Categoria
+    +esGasto()
+    +esIngreso()
+  }
+
+  class Categoria {
+    +id : Long
+    +nombre : String
+    +descripcion : String
+    +esPredefinida : Boolean
+    +agregarMovimiento(m : Movimiento)
+    +removerMovimiento(m : Movimiento)
+  }
+
+  enum TipoMovimiento {
+    INGRESO
+    GASTO
+  }
+}
+
+Categoria "1" --> "*" Movimiento
+@enduml

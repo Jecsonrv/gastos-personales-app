@@ -12,14 +12,17 @@ import java.util.Map;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.proyecto.gastospersonales.domain.model.Categoria;
 import com.proyecto.gastospersonales.domain.model.Movimiento;
 import com.proyecto.gastospersonales.domain.model.TipoMovimiento;
+import com.proyecto.gastospersonales.domain.model.Usuario;
 import com.proyecto.gastospersonales.domain.service.CategoriaService;
 import com.proyecto.gastospersonales.domain.service.MovimientoService;
+import com.proyecto.gastospersonales.domain.service.UsuarioService;
 import com.proyecto.gastospersonales.infrastructure.repository.MovimientoRepositoryInterface;
 
 /**
@@ -29,33 +32,38 @@ import com.proyecto.gastospersonales.infrastructure.repository.MovimientoReposit
 @Service
 @Transactional
 public class MovimientoServiceImpl implements MovimientoService {
-    
+
+    private final MovimientoRepositoryInterface movimientoRepository;
+    private final CategoriaService categoriaService;
+    private final UsuarioService usuarioService;
+
     @Autowired
-    private MovimientoRepositoryInterface movimientoRepository;
-    
-    @Autowired
-    private CategoriaService categoriaService;
+    public MovimientoServiceImpl(MovimientoRepositoryInterface movimientoRepository, @Lazy CategoriaService categoriaService, UsuarioService usuarioService) {
+        this.movimientoRepository = movimientoRepository;
+        this.categoriaService = categoriaService;
+        this.usuarioService = usuarioService;
+    }
     
     /**
      * Registra un nuevo gasto
      */
     @Override
-    public Movimiento registrarGasto(String descripcion, BigDecimal monto, Long categoriaId) {
-        return registrarMovimiento(descripcion, monto, TipoMovimiento.GASTO, categoriaId);
+    public Movimiento registrarGasto(String descripcion, BigDecimal monto, Long categoriaId, Long userId, LocalDate fecha) {
+        return registrarMovimiento(descripcion, monto, TipoMovimiento.GASTO, categoriaId, userId, fecha);
     }
     
     /**
      * Registra un nuevo ingreso
      */
     @Override
-    public Movimiento registrarIngreso(String descripcion, BigDecimal monto, Long categoriaId) {
-        return registrarMovimiento(descripcion, monto, TipoMovimiento.INGRESO, categoriaId);
+    public Movimiento registrarIngreso(String descripcion, BigDecimal monto, Long categoriaId, Long userId, LocalDate fecha) {
+        return registrarMovimiento(descripcion, monto, TipoMovimiento.INGRESO, categoriaId, userId, fecha);
     }
     
     /**
      * Registra un movimiento (gasto o ingreso)
      */
-    private Movimiento registrarMovimiento(String descripcion, BigDecimal monto, TipoMovimiento tipo, Long categoriaId) {
+    private Movimiento registrarMovimiento(String descripcion, BigDecimal monto, TipoMovimiento tipo, Long categoriaId, Long userId, LocalDate fecha) {
         // Validar parámetros
         if (descripcion == null || descripcion.trim().length() < 3) {
             throw new IllegalArgumentException("La descripción debe tener al menos 3 caracteres");
@@ -72,13 +80,19 @@ public class MovimientoServiceImpl implements MovimientoService {
         // Buscar la categoría
         Categoria categoria = categoriaService.obtenerCategoriaPorId(categoriaId)
                 .orElseThrow(() -> new IllegalArgumentException("Categoría no encontrada"));
+
+        // Buscar el usuario
+        Usuario usuario = usuarioService.obtenerPorId(userId)
+                .orElseThrow(() -> new IllegalArgumentException("Usuario no encontrado"));
         
         // Crear el movimiento
         Movimiento movimiento = new Movimiento(
                 descripcion.trim(), 
                 monto.setScale(2, RoundingMode.HALF_UP), 
                 tipo, 
-                categoria
+                categoria,
+                usuario,
+                fecha.atStartOfDay()
         );
         
         return movimientoRepository.save(movimiento);
@@ -89,8 +103,8 @@ public class MovimientoServiceImpl implements MovimientoService {
      */
     @Override
     @Transactional(readOnly = true)
-    public List<Movimiento> obtenerTodosLosMovimientos() {
-        return movimientoRepository.findAllByOrderByFechaDesc();
+    public List<Movimiento> obtenerTodosLosMovimientos(Long userId) {
+        return movimientoRepository.findAllByUsuarioIdOrderByFechaDesc(userId);
     }
     
     /**
@@ -98,8 +112,8 @@ public class MovimientoServiceImpl implements MovimientoService {
      */
     @Override
     @Transactional(readOnly = true)
-    public Optional<Movimiento> obtenerMovimientoPorId(Long id) {
-        return movimientoRepository.findById(id);
+    public Optional<Movimiento> obtenerMovimientoPorId(Long id, Long userId) {
+        return movimientoRepository.findByIdAndUsuarioId(id, userId);
     }
     
     /**
@@ -107,8 +121,8 @@ public class MovimientoServiceImpl implements MovimientoService {
      */
     @Override
     @Transactional(readOnly = true)
-    public List<Movimiento> obtenerUltimosMovimientos() {
-        return movimientoRepository.findTop10ByOrderByFechaDesc();
+    public List<Movimiento> obtenerUltimosMovimientos(Long userId) {
+        return movimientoRepository.findTop10ByUsuarioIdOrderByFechaDesc(userId);
     }
     
     /**
@@ -116,8 +130,8 @@ public class MovimientoServiceImpl implements MovimientoService {
      */
     @Override
     @Transactional(readOnly = true)
-    public List<Movimiento> obtenerMovimientosPorTipo(TipoMovimiento tipo) {
-        return movimientoRepository.findByTipoOrderByFechaDesc(tipo);
+    public List<Movimiento> obtenerMovimientosPorTipo(TipoMovimiento tipo, Long userId) {
+        return movimientoRepository.findByTipoAndUsuarioIdOrderByFechaDesc(tipo, userId);
     }
     
     /**
@@ -125,10 +139,10 @@ public class MovimientoServiceImpl implements MovimientoService {
      */
     @Override
     @Transactional(readOnly = true)
-    public List<Movimiento> obtenerMovimientosPorCategoria(Long categoriaId) {
+    public List<Movimiento> obtenerMovimientosPorCategoria(Long categoriaId, Long userId) {
         Categoria categoria = categoriaService.obtenerCategoriaPorId(categoriaId)
                 .orElseThrow(() -> new IllegalArgumentException("Categoría no encontrada"));
-        return movimientoRepository.findByCategoriaOrderByFechaDesc(categoria);
+        return movimientoRepository.findByCategoriaAndUsuarioIdOrderByFechaDesc(categoria, userId);
     }
     
     /**
@@ -136,11 +150,11 @@ public class MovimientoServiceImpl implements MovimientoService {
      */
     @Override
     @Transactional(readOnly = true)
-    public List<Movimiento> buscarMovimientos(String texto) {
+    public List<Movimiento> buscarMovimientos(String texto, Long userId) {
         if (texto == null || texto.trim().isEmpty()) {
-            return obtenerTodosLosMovimientos();
+            return obtenerTodosLosMovimientos(userId);
         }
-        return movimientoRepository.findByDescripcionContainingIgnoreCaseOrderByFechaDesc(texto.trim());
+        return movimientoRepository.findByDescripcionContainingIgnoreCaseAndUsuarioIdOrderByFechaDesc(texto.trim(), userId);
     }
     
     /**
@@ -148,8 +162,8 @@ public class MovimientoServiceImpl implements MovimientoService {
      */
     @Override
     @Transactional(readOnly = true)
-    public BigDecimal calcularBalanceTotal() {
-        return movimientoRepository.calcularBalanceTotal();
+    public BigDecimal calcularBalanceTotal(Long userId) {
+        return movimientoRepository.calcularBalanceTotalByUsuarioId(userId);
     }
     
     /**
@@ -157,8 +171,8 @@ public class MovimientoServiceImpl implements MovimientoService {
      */
     @Override
     @Transactional(readOnly = true)
-    public BigDecimal calcularTotalIngresos() {
-        return movimientoRepository.sumMontoByTipo(TipoMovimiento.INGRESO);
+    public BigDecimal calcularTotalIngresos(Long userId) {
+        return movimientoRepository.sumMontoByTipoAndUsuarioId(TipoMovimiento.INGRESO, userId);
     }
     
     /**
@@ -166,8 +180,8 @@ public class MovimientoServiceImpl implements MovimientoService {
      */
     @Override
     @Transactional(readOnly = true)
-    public BigDecimal calcularTotalGastos() {
-        return movimientoRepository.sumMontoByTipo(TipoMovimiento.GASTO);
+    public BigDecimal calcularTotalGastos(Long userId) {
+        return movimientoRepository.sumMontoByTipoAndUsuarioId(TipoMovimiento.GASTO, userId);
     }
     
     /**
@@ -175,12 +189,12 @@ public class MovimientoServiceImpl implements MovimientoService {
      */
     @Override
     @Transactional(readOnly = true)
-    public Map<String, BigDecimal> obtenerGastosPorCategoriaDelMes() {
+    public Map<String, BigDecimal> obtenerGastosPorCategoriaDelMes(Long userId) {
         LocalDateTime inicioMes = LocalDate.now().withDayOfMonth(1).atStartOfDay();
         LocalDateTime finMes = LocalDate.now().with(TemporalAdjusters.lastDayOfMonth()).atTime(LocalTime.MAX);
         
-        List<Object[]> resultados = movimientoRepository.sumMontoByTipoAndFechaGroupByCategoria(
-                TipoMovimiento.GASTO, inicioMes, finMes);
+        List<Object[]> resultados = movimientoRepository.sumMontoByTipoAndFechaBetweenAndUsuarioIdGroupByCategoria(
+                TipoMovimiento.GASTO, inicioMes, finMes, userId);
         
         Map<String, BigDecimal> gastosPorCategoria = new LinkedHashMap<>();
         for (Object[] resultado : resultados) {
@@ -197,14 +211,14 @@ public class MovimientoServiceImpl implements MovimientoService {
      */
     @Override
     @Transactional(readOnly = true)
-    public Map<String, BigDecimal> obtenerResumenMensual() {
+    public Map<String, BigDecimal> obtenerResumenMensual(Long userId) {
         LocalDateTime inicioMes = LocalDate.now().withDayOfMonth(1).atStartOfDay();
         LocalDateTime finMes = LocalDate.now().with(TemporalAdjusters.lastDayOfMonth()).atTime(LocalTime.MAX);
         
-        BigDecimal ingresosMes = movimientoRepository.sumMontoByTipoAndFechaBetween(
-                TipoMovimiento.INGRESO, inicioMes, finMes);
-        BigDecimal gastosMes = movimientoRepository.sumMontoByTipoAndFechaBetween(
-                TipoMovimiento.GASTO, inicioMes, finMes);
+        BigDecimal ingresosMes = movimientoRepository.sumMontoByTipoAndFechaBetweenAndUsuarioId(
+                TipoMovimiento.INGRESO, inicioMes, finMes, userId);
+        BigDecimal gastosMes = movimientoRepository.sumMontoByTipoAndFechaBetweenAndUsuarioId(
+                TipoMovimiento.GASTO, inicioMes, finMes, userId);
         BigDecimal balance = ingresosMes.subtract(gastosMes);
         
         Map<String, BigDecimal> resumen = new LinkedHashMap<>();
@@ -219,24 +233,32 @@ public class MovimientoServiceImpl implements MovimientoService {
      * Actualiza un movimiento existente
      */
     @Override
-    public Movimiento actualizarMovimiento(Long id, String nuevaDescripcion, BigDecimal nuevoMonto, Long nuevaCategoriaId) {
-        Movimiento movimiento = movimientoRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("Movimiento no encontrado"));
-        
+    public Movimiento actualizarMovimiento(Long id, String nuevaDescripcion, BigDecimal nuevoMonto, Long nuevaCategoriaId, java.time.LocalDate nuevaFecha, com.proyecto.gastospersonales.domain.model.TipoMovimiento nuevoTipo, Long userId) {
+        Movimiento movimiento = movimientoRepository.findByIdAndUsuarioId(id, userId)
+                .orElseThrow(() -> new IllegalArgumentException("Movimiento no encontrado o no pertenece al usuario"));
+
         if (nuevaDescripcion != null && !nuevaDescripcion.trim().isEmpty()) {
             movimiento.setDescripcion(nuevaDescripcion.trim());
         }
-        
+
         if (nuevoMonto != null && nuevoMonto.compareTo(BigDecimal.ZERO) > 0) {
             movimiento.setMonto(nuevoMonto.setScale(2, RoundingMode.HALF_UP));
         }
-        
+
         if (nuevaCategoriaId != null) {
             Categoria nuevaCategoria = categoriaService.obtenerCategoriaPorId(nuevaCategoriaId)
                     .orElseThrow(() -> new IllegalArgumentException("Categoría no encontrada"));
             movimiento.setCategoria(nuevaCategoria);
         }
-        
+
+        if (nuevaFecha != null) {
+            movimiento.setFecha(nuevaFecha.atStartOfDay());
+        }
+
+        if (nuevoTipo != null) {
+            movimiento.setTipo(nuevoTipo);
+        }
+
         return movimientoRepository.save(movimiento);
     }
     
@@ -244,9 +266,9 @@ public class MovimientoServiceImpl implements MovimientoService {
      * Elimina un movimiento
      */
     @Override
-    public void eliminarMovimiento(Long id) {
-        if (!movimientoRepository.existsById(id)) {
-            throw new IllegalArgumentException("Movimiento no encontrado");
+    public void eliminarMovimiento(Long id, Long userId) {
+        if (!movimientoRepository.existsByIdAndUsuarioId(id, userId)) {
+            throw new IllegalArgumentException("Movimiento no encontrado o no pertenece al usuario");
         }
         movimientoRepository.deleteById(id);
     }
@@ -256,8 +278,8 @@ public class MovimientoServiceImpl implements MovimientoService {
      */
     @Override
     @Transactional(readOnly = true)
-    public List<Movimiento> obtenerMovimientosDelMes() {
-        return movimientoRepository.findMovimientosDelMesActual();
+    public List<Movimiento> obtenerMovimientosDelMes(Long userId) {
+        return movimientoRepository.findMovimientosDelMesActualByUsuarioId(userId);
     }
     
     /**
@@ -265,9 +287,9 @@ public class MovimientoServiceImpl implements MovimientoService {
      */
     @Override
     @Transactional(readOnly = true)
-    public List<Movimiento> obtenerMovimientosPorPeriodo(LocalDate inicio, LocalDate fin) {
+    public List<Movimiento> obtenerMovimientosPorPeriodo(LocalDate inicio, LocalDate fin, Long userId) {
         LocalDateTime fechaInicio = inicio.atStartOfDay();
         LocalDateTime fechaFin = fin.atTime(LocalTime.MAX);
-        return movimientoRepository.findByFechaBetweenOrderByFechaDesc(fechaInicio, fechaFin);
+        return movimientoRepository.findByFechaBetweenAndUsuarioIdOrderByFechaDesc(fechaInicio, fechaFin, userId);
     }
 }

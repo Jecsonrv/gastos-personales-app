@@ -1,0 +1,23 @@
+@startuml secuencia_crear_movimiento
+actor Usuario
+participant Frontend
+participant Api
+participant Controller
+participant Service
+participant Repo
+database DB
+
+Usuario -> Frontend: llenar y enviar formulario
+Frontend -> Api: POST /api/movimientos/gastos (descripcion, monto, categoriaId)
+Api -> Controller: request
+Controller -> Service: registrarGasto(...)
+Service -> Service: validar datos
+Service -> Repo: save(movimiento)
+Repo -> DB: INSERT
+DB --> Repo: OK
+Repo --> Service: movimiento
+Service --> Controller: movimiento (201)
+Controller --> Api: response
+Api --> Frontend: 201 created + movimiento
+Frontend --> Usuario: mostrar movimiento creado
+@enduml

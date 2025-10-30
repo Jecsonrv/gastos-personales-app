@@ -69,7 +69,7 @@ function getCurrencySettings(): { currency: string; locale: string } {
             };
         }
     } catch (error) {
-        console.error("Error getting currency settings:", error);
+        // Error silenciado
     }
 
     return { currency: "USD", locale: "en-US" };
@@ -143,7 +143,6 @@ export function formatDate(date: string | Date, format?: string): string {
                 return `${day}/${month}/${year}`;
         }
     } catch (error) {
-        console.error("Error formatting date:", error);
         return "Fecha inválida";
     }
 }
@@ -159,7 +158,7 @@ function getDateFormat(): string {
             return settings.dateFormat || "DD/MM/YYYY";
         }
     } catch (error) {
-        console.error("Error getting date format:", error);
+        // Error silenciado
     }
     return "DD/MM/YYYY";
 }
@@ -192,7 +191,6 @@ export function formatDateTime(date: string | Date, format?: string): string {
 
         return `${dateStr} ${timeStr}`;
     } catch (error) {
-        console.error("Error formatting datetime:", error);
         return "Fecha inválida";
     }
 }

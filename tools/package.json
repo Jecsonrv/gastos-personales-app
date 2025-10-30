@@ -1,0 +1,13 @@
+{
+    "name": "pdf-tools",
+    "version": "1.0.0",
+    "description": "Herramienta pequeña para convertir Markdown a PDF usando Puppeteer",
+    "main": "generate_pdf.js",
+    "scripts": {
+        "generate-pdf": "node generate_pdf.js"
+    },
+    "dependencies": {
+        "marked": "^5.1.0",
+        "puppeteer": "^21.3.0"
+    }
+}

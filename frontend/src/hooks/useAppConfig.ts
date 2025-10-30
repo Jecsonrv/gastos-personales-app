@@ -27,7 +27,7 @@ export function useAppConfig() {
                     const parsedSettings = JSON.parse(savedSettings);
                     setSettings({ ...DEFAULT_SETTINGS, ...parsedSettings });
                 } catch (error) {
-                    console.error("Error loading settings:", error);
+                    // Error silenciado
                 }
             }
         };
@@ -138,7 +138,6 @@ export function formatDateWithConfig(
 
         // Verificar si la fecha es válida
         if (isNaN(dateObj.getTime())) {
-            console.warn("Invalid date received:", date);
             return "Invalid Date";
         }
 
@@ -159,7 +158,6 @@ export function formatDateWithConfig(
                 return `${day}/${month}/${year}`;
         }
     } catch (error) {
-        console.error("Error formatting date:", error, "Date:", date);
         return "Invalid Date";
     }
 }

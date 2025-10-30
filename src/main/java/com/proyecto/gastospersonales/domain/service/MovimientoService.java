@@ -15,37 +15,37 @@ import com.proyecto.gastospersonales.domain.model.TipoMovimiento;
  */
 public interface MovimientoService {
     
-    Movimiento registrarGasto(String descripcion, BigDecimal monto, Long categoriaId);
+    Movimiento registrarGasto(String descripcion, BigDecimal monto, Long categoriaId, Long userId, LocalDate fecha);
     
-    Movimiento registrarIngreso(String descripcion, BigDecimal monto, Long categoriaId);
+    Movimiento registrarIngreso(String descripcion, BigDecimal monto, Long categoriaId, Long userId, LocalDate fecha);
     
-    List<Movimiento> obtenerTodosLosMovimientos();
+    List<Movimiento> obtenerTodosLosMovimientos(Long userId);
     
-    Optional<Movimiento> obtenerMovimientoPorId(Long id);
+    Optional<Movimiento> obtenerMovimientoPorId(Long id, Long userId);
     
-    List<Movimiento> obtenerUltimosMovimientos();
+    List<Movimiento> obtenerUltimosMovimientos(Long userId);
     
-    List<Movimiento> obtenerMovimientosPorTipo(TipoMovimiento tipo);
+    List<Movimiento> obtenerMovimientosPorTipo(TipoMovimiento tipo, Long userId);
     
-    List<Movimiento> obtenerMovimientosPorCategoria(Long categoriaId);
+    List<Movimiento> obtenerMovimientosPorCategoria(Long categoriaId, Long userId);
     
-    List<Movimiento> buscarMovimientos(String texto);
+    List<Movimiento> buscarMovimientos(String texto, Long userId);
     
-    BigDecimal calcularBalanceTotal();
+    BigDecimal calcularBalanceTotal(Long userId);
     
-    BigDecimal calcularTotalIngresos();
+    BigDecimal calcularTotalIngresos(Long userId);
     
-    BigDecimal calcularTotalGastos();
+    BigDecimal calcularTotalGastos(Long userId);
     
-    Map<String, BigDecimal> obtenerGastosPorCategoriaDelMes();
+    Map<String, BigDecimal> obtenerGastosPorCategoriaDelMes(Long userId);
     
-    Map<String, BigDecimal> obtenerResumenMensual();
+    Map<String, BigDecimal> obtenerResumenMensual(Long userId);
     
-    Movimiento actualizarMovimiento(Long id, String nuevaDescripcion, BigDecimal nuevoMonto, Long nuevaCategoriaId);
+    Movimiento actualizarMovimiento(Long id, String nuevaDescripcion, BigDecimal nuevoMonto, Long nuevaCategoriaId, java.time.LocalDate nuevaFecha, com.proyecto.gastospersonales.domain.model.TipoMovimiento nuevoTipo, Long userId);
     
-    void eliminarMovimiento(Long id);
+    void eliminarMovimiento(Long id, Long userId);
     
-    List<Movimiento> obtenerMovimientosDelMes();
+    List<Movimiento> obtenerMovimientosDelMes(Long userId);
     
-    List<Movimiento> obtenerMovimientosPorPeriodo(LocalDate inicio, LocalDate fin);
+    List<Movimiento> obtenerMovimientosPorPeriodo(LocalDate inicio, LocalDate fin, Long userId);
 }

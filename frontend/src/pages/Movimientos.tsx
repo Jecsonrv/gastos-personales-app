@@ -5,7 +5,9 @@ import {
     CardHeader,
     CardTitle,
     PageLoader,
+    TableSkeleton,
 } from "../components/ui";
+import { useToast } from "../components/ui/Toast";
 import { Button } from "../components/ui/Button";
 import { Input } from "../components/ui/Input";
 import {
@@ -18,6 +20,7 @@ import {
     ArrowDownRight,
     Calendar,
 } from "lucide-react";
+import Portal from "../components/ui/Portal";
 import {
     useMovimientos,
     useCreateMovimiento,
@@ -55,6 +58,7 @@ export function Movimientos() {
     // Hook para configuración con actualización automática
     const appConfig = useAppConfig();
     const { t } = useTranslation();
+    const { addToast } = useToast();
 
     // Hooks de datos
     const { data: movimientos, isLoading: isLoadingMovimientos } =
@@ -65,11 +69,18 @@ export function Movimientos() {
     const updateMovimiento = useUpdateMovimiento();
     const deleteMovimiento = useDeleteMovimiento();
 
+    const toYYYYMMDD = (date: Date) => {
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, "0");
+        const day = String(date.getDate()).padStart(2, "0");
+        return `${year}-${month}-${day}`;
+    };
+
     // Estado del formulario
     const [formData, setFormData] = useState<MovimientoFormData>({
         descripcion: "",
         monto: "",
-        fechaMovimiento: new Date().toISOString().split("T")[0],
+        fechaMovimiento: toYYYYMMDD(new Date()),
         tipo: TipoMovimiento.GASTO,
         categoriaId: "",
     });
@@ -110,8 +121,12 @@ export function Movimientos() {
             }
 
             resetForm();
-        } catch (error) {
-            console.error("Error al guardar movimiento:", error);
+            addToast("Movimiento guardado exitosamente", "success");
+        } catch (error: any) {
+            const errorMessage =
+                error.response?.data?.message ||
+                "Error al guardar movimiento. Por favor intente nuevamente.";
+            addToast(errorMessage, "error");
         }
     };
 
@@ -119,7 +134,7 @@ export function Movimientos() {
         setFormData({
             descripcion: "",
             monto: "",
-            fechaMovimiento: new Date().toISOString().split("T")[0],
+            fechaMovimiento: toYYYYMMDD(new Date()),
             tipo: TipoMovimiento.GASTO,
             categoriaId: "",
         });
@@ -131,7 +146,7 @@ export function Movimientos() {
         setFormData({
             descripcion: movimiento.descripcion,
             monto: movimiento.monto.toString(),
-            fechaMovimiento: movimiento.fechaMovimiento.split("T")[0],
+            fechaMovimiento: toYYYYMMDD(new Date(movimiento.fechaMovimiento)),
             tipo: movimiento.tipo,
             categoriaId: movimiento.categoria.id.toString(),
         });
@@ -143,13 +158,17 @@ export function Movimientos() {
         if (window.confirm(t("movements.deleteConfirm"))) {
             try {
                 await deleteMovimiento.mutateAsync(id);
-            } catch (error) {
-                console.error("Error al eliminar movimiento:", error);
+                addToast("Movimiento eliminado exitosamente", "success");
+            } catch (error: any) {
+                const errorMessage =
+                    error.response?.data?.message ||
+                    "Error al eliminar movimiento. Por favor intente nuevamente.";
+                addToast(errorMessage, "error");
             }
         }
     };
 
-    if (isLoadingMovimientos || isLoadingCategorias) {
+    if (isLoadingCategorias) {
         return <PageLoader text={t("movements.loading")} />;
     }
 
@@ -210,152 +229,174 @@ export function Movimientos() {
 
             {/* Formulario Modal */}
             {isFormVisible && (
-                <div className="fixed inset-0 bg-background/80 backdrop-blur-sm flex items-center justify-center z-50">
-                    <Card className="max-w-md w-full mx-4">
-                        <CardHeader>
-                            <CardTitle>
-                                {editingMovimiento
-                                    ? t("movements.editMovement")
-                                    : t("movements.newMovement")}
-                            </CardTitle>
-                        </CardHeader>
-                        <CardContent>
-                            <form onSubmit={handleSubmit} className="space-y-4">
-                                <div>
-                                    <label className="block text-sm font-medium text-foreground mb-1">
-                                        {t("movements.description")}
-                                    </label>
-                                    <Input
-                                        type="text"
-                                        value={formData.descripcion}
-                                        onChange={(e) =>
-                                            setFormData({
-                                                ...formData,
-                                                descripcion: e.target.value,
-                                            })
-                                        }
-                                        required
-                                    />
-                                </div>
-
-                                <div>
-                                    <label className="block text-sm font-medium text-foreground mb-1">
-                                        {t("movements.amount")}
-                                    </label>
-                                    <Input
-                                        type="number"
-                                        step="0.01"
-                                        value={formData.monto}
-                                        onChange={(e) =>
-                                            setFormData({
-                                                ...formData,
-                                                monto: e.target.value,
-                                            })
-                                        }
-                                        required
-                                    />
-                                </div>
-
-                                <div>
-                                    <label className="block text-sm font-medium text-foreground mb-1">
-                                        {t("movements.date")}
-                                    </label>
-                                    <Input
-                                        type="date"
-                                        value={formData.fechaMovimiento}
-                                        onChange={(e) =>
-                                            setFormData({
-                                                ...formData,
-                                                fechaMovimiento: e.target.value,
-                                            })
-                                        }
-                                        required
-                                    />
-                                </div>
-
-                                <div>
-                                    <label className="block text-sm font-medium text-foreground mb-1">
-                                        {t("movements.type")}
-                                    </label>
-                                    <select
-                                        value={formData.tipo}
-                                        onChange={(e) =>
-                                            setFormData({
-                                                ...formData,
-                                                tipo: e.target
-                                                    .value as TipoMovimiento,
-                                            })
-                                        }
-                                        className="w-full px-3 py-2 border border-input bg-background text-foreground rounded-md focus:outline-none focus:ring-2 focus:ring-ring"
-                                        required
+                // Render modal using portal so it is outside normal DOM flow
+                <>
+                    {/* eslint-disable-next-line jsx-a11y/no-noninteractive-element-interactions */}
+                    <Portal>
+                        <div className="fixed inset-0 bg-background/80 backdrop-blur-sm flex items-center justify-center z-50">
+                            <Card className="max-w-md w-full mx-4">
+                                <CardHeader>
+                                    <CardTitle>
+                                        {editingMovimiento
+                                            ? t("movements.editMovement")
+                                            : t("movements.newMovement")}
+                                    </CardTitle>
+                                </CardHeader>
+                                <CardContent>
+                                    <form
+                                        onSubmit={handleSubmit}
+                                        className="space-y-4"
                                     >
-                                        <option value={TipoMovimiento.GASTO}>
-                                            {t("movements.expense")}
-                                        </option>
-                                        <option value={TipoMovimiento.INGRESO}>
-                                            {t("movements.income")}
-                                        </option>
-                                    </select>
-                                </div>
+                                        <div>
+                                            <label className="block text-sm font-medium text-foreground mb-1">
+                                                {t("movements.description")}
+                                            </label>
+                                            <Input
+                                                type="text"
+                                                value={formData.descripcion}
+                                                onChange={(e) =>
+                                                    setFormData({
+                                                        ...formData,
+                                                        descripcion:
+                                                            e.target.value,
+                                                    })
+                                                }
+                                                required
+                                            />
+                                        </div>
 
-                                <div>
-                                    <label className="block text-sm font-medium text-foreground mb-1">
-                                        {t("movements.category")}
-                                    </label>
-                                    <select
-                                        value={formData.categoriaId}
-                                        onChange={(e) =>
-                                            setFormData({
-                                                ...formData,
-                                                categoriaId: e.target.value,
-                                            })
-                                        }
-                                        className="w-full px-3 py-2 border border-input bg-background text-foreground rounded-md focus:outline-none focus:ring-2 focus:ring-ring"
-                                        required
-                                    >
-                                        <option value="">
-                                            {t("movements.selectCategory")}
-                                        </option>
-                                        {categorias?.map((categoria) => (
-                                            <option
-                                                key={categoria.id}
-                                                value={categoria.id}
+                                        <div>
+                                            <label className="block text-sm font-medium text-foreground mb-1">
+                                                {t("movements.amount")}
+                                            </label>
+                                            <Input
+                                                type="number"
+                                                step="0.01"
+                                                value={formData.monto}
+                                                onChange={(e) =>
+                                                    setFormData({
+                                                        ...formData,
+                                                        monto: e.target.value,
+                                                    })
+                                                }
+                                                required
+                                            />
+                                        </div>
+
+                                        <div>
+                                            <label className="block text-sm font-medium text-foreground mb-1">
+                                                {t("movements.date")}
+                                            </label>
+                                            <Input
+                                                type="date"
+                                                value={formData.fechaMovimiento}
+                                                onChange={(e) =>
+                                                    setFormData({
+                                                        ...formData,
+                                                        fechaMovimiento:
+                                                            e.target.value,
+                                                    })
+                                                }
+                                                required
+                                            />
+                                        </div>
+
+                                        <div>
+                                            <label className="block text-sm font-medium text-foreground mb-1">
+                                                {t("movements.type")}
+                                            </label>
+                                            <select
+                                                value={formData.tipo}
+                                                onChange={(e) =>
+                                                    setFormData({
+                                                        ...formData,
+                                                        tipo: e.target
+                                                            .value as TipoMovimiento,
+                                                    })
+                                                }
+                                                className="w-full px-3 py-2 border border-input bg-background text-foreground rounded-md focus:outline-none focus:ring-2 focus:ring-ring"
+                                                required
                                             >
-                                                {categoria.nombre}
-                                            </option>
-                                        ))}
-                                    </select>
-                                </div>
+                                                <option
+                                                    value={TipoMovimiento.GASTO}
+                                                >
+                                                    {t("movements.expense")}
+                                                </option>
+                                                <option
+                                                    value={
+                                                        TipoMovimiento.INGRESO
+                                                    }
+                                                >
+                                                    {t("movements.income")}
+                                                </option>
+                                            </select>
+                                        </div>
 
-                                <div className="flex space-x-3 pt-4">
-                                    <Button
-                                        type="submit"
-                                        className="flex-1"
-                                        disabled={
-                                            createMovimiento.isPending ||
-                                            updateMovimiento.isPending
-                                        }
-                                    >
-                                        {createMovimiento.isPending ||
-                                        updateMovimiento.isPending
-                                            ? t("movements.saving")
-                                            : editingMovimiento
-                                            ? t("movements.update")
-                                            : t("movements.create")}
-                                    </Button>
-                                    <Button
-                                        type="button"
-                                        variant="outline"
-                                        onClick={resetForm}
-                                        className="flex-1"
-                                    >
-                                        {t("movements.cancel")}
-                                    </Button>
-                                </div>
-                            </form>
-                        </CardContent>
-                    </Card>
-                </div>
+                                        <div>
+                                            <label className="block text-sm font-medium text-foreground mb-1">
+                                                {t("movements.category")}
+                                            </label>
+                                            <select
+                                                value={formData.categoriaId}
+                                                onChange={(e) =>
+                                                    setFormData({
+                                                        ...formData,
+                                                        categoriaId:
+                                                            e.target.value,
+                                                    })
+                                                }
+                                                className="w-full px-3 py-2 border border-input bg-background text-foreground rounded-md focus:outline-none focus:ring-2 focus:ring-ring"
+                                                required
+                                            >
+                                                <option value="">
+                                                    {t(
+                                                        "movements.selectCategory"
+                                                    )}
+                                                </option>
+                                                {categorias?.map(
+                                                    (categoria) => (
+                                                        <option
+                                                            key={categoria.id}
+                                                            value={categoria.id}
+                                                        >
+                                                            {categoria.nombre}
+                                                        </option>
+                                                    )
+                                                )}
+                                            </select>
+                                        </div>
+
+                                        <div className="flex space-x-3 pt-4">
+                                            <Button
+                                                type="submit"
+                                                className="flex-1"
+                                                disabled={
+                                                    createMovimiento.isPending ||
+                                                    updateMovimiento.isPending
+                                                }
+                                            >
+                                                {createMovimiento.isPending ||
+                                                updateMovimiento.isPending
+                                                    ? t("movements.saving")
+                                                    : editingMovimiento
+                                                    ? t("movements.update")
+                                                    : t("movements.create")}
+                                            </Button>
+                                            <Button
+                                                type="button"
+                                                variant="outline"
+                                                onClick={resetForm}
+                                                className="flex-1"
+                                            >
+                                                {t("movements.cancel")}
+                                            </Button>
+                                        </div>
+                                    </form>
+                                </CardContent>
+                            </Card>
+                        </div>
+                    </Portal>
+                </>
             )}
 
             {/* Lista de movimientos */}
@@ -364,7 +405,9 @@ export function Movimientos() {
                     <CardTitle>{t("movements.listTitle")}</CardTitle>
                 </CardHeader>
                 <CardContent>
-                    {filteredMovimientos.length === 0 ? (
+                    {isLoadingMovimientos ? (
+                        <TableSkeleton rows={5} cols={5} />
+                    ) : filteredMovimientos.length === 0 ? (
                         <div className="text-center py-12">
                             <Calendar className="w-12 h-12 text-muted-foreground mx-auto mb-3" />
                             <p className="text-muted-foreground">

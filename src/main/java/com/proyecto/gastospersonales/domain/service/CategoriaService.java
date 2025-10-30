@@ -25,7 +25,7 @@ public interface CategoriaService {
     
     Categoria actualizarCategoria(Long id, String nuevoNombre, String nuevaDescripcion);
     
-    void eliminarCategoria(Long id);
+    void eliminarCategoria(Long id, Long userId);
     
     List<Categoria> buscarCategoriasPorTexto(String texto);
     

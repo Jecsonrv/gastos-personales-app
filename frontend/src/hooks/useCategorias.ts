@@ -34,11 +34,7 @@ export function useCreateCategoria() {
         mutationFn: (data: CategoriaCreateDTO) =>
             apiService.createCategoria(data),
         onSuccess: () => {
-            // Invalidar queries relacionadas
             queryClient.invalidateQueries({ queryKey: QUERY_KEYS.categorias });
-        },
-        onError: (error) => {
-            console.error("Error creating categoria:", error);
         },
     });
 }
@@ -51,16 +47,11 @@ export function useUpdateCategoria() {
         mutationFn: (data: CategoriaUpdateDTO) =>
             apiService.updateCategoria(data),
         onSuccess: (updatedCategoria) => {
-            // Invalidar queries relacionadas
             queryClient.invalidateQueries({ queryKey: QUERY_KEYS.categorias });
             queryClient.invalidateQueries({
                 queryKey: QUERY_KEYS.categoriaById(updatedCategoria.id),
             });
-            // También invalidar movimientos ya que pueden tener referencia a esta categoría
             queryClient.invalidateQueries({ queryKey: ["movimientos"] });
-        },
-        onError: (error) => {
-            console.error("Error updating categoria:", error);
         },
     });
 }
@@ -72,13 +63,9 @@ export function useDeleteCategoria() {
     return useMutation({
         mutationFn: (id: number) => apiService.deleteCategoria(id),
         onSuccess: () => {
-            // Invalidar queries relacionadas
             queryClient.invalidateQueries({ queryKey: QUERY_KEYS.categorias });
             queryClient.invalidateQueries({ queryKey: ["movimientos"] });
             queryClient.invalidateQueries({ queryKey: ["reportes"] });
-        },
-        onError: (error) => {
-            console.error("Error deleting categoria:", error);
         },
     });
 }

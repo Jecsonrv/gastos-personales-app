@@ -21,6 +21,7 @@ import { useTranslation } from "../hooks/useTranslation";
 import { TipoMovimiento } from "../types";
 import { TrendingUp, TrendingDown, DollarSign, Activity } from "lucide-react";
 import { useMemo } from "react";
+import { CHART_CONFIG } from "../constants";
 import {
     ResponsiveContainer,
     LineChart,
@@ -204,8 +205,15 @@ export function Dashboard() {
                                 <ResponsiveContainer width="100%" height={300}>
                                     <LineChart data={normalizedMensual}>
                                         <CartesianGrid strokeDasharray="3 3" />
-                                        <XAxis dataKey="mesLabel" />
-                                        <YAxis />
+                                        <XAxis dataKey="mesLabel" interval="preserveStartEnd" />
+                                        <YAxis
+                                            tickFormatter={(value) =>
+                                                formatCurrencyWithConfig(
+                                                    value,
+                                                    appConfig
+                                                )
+                                            }
+                                        />
                                         <Tooltip
                                             formatter={(
                                                 value: number | string
@@ -221,19 +229,19 @@ export function Dashboard() {
                                         <Line
                                             type="monotone"
                                             dataKey="ingresos"
-                                            stroke="#10b981"
+                                            stroke={CHART_CONFIG.COLORS.SUCCESS}
                                             strokeWidth={2}
                                         />
                                         <Line
                                             type="monotone"
                                             dataKey="gastos"
-                                            stroke="#ef4444"
+                                            stroke={CHART_CONFIG.COLORS.DANGER}
                                             strokeWidth={2}
                                         />
                                         <Line
                                             type="monotone"
                                             dataKey="balance"
-                                            stroke="#3b82f6"
+                                            stroke={CHART_CONFIG.COLORS.PRIMARY}
                                             strokeWidth={2}
                                         />
                                     </LineChart>

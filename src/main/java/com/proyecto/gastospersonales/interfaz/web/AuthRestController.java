@@ -1,0 +1,185 @@
+package com.proyecto.gastospersonales.interfaz.web;
+
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Optional;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+
+import com.proyecto.gastospersonales.domain.dto.AuthResponse;
+import com.proyecto.gastospersonales.domain.dto.LoginRequest;
+import com.proyecto.gastospersonales.domain.dto.RegisterRequest;
+import com.proyecto.gastospersonales.domain.model.Usuario;
+import com.proyecto.gastospersonales.domain.service.AuthService;
+import com.proyecto.gastospersonales.domain.service.UsuarioService;
+import com.proyecto.gastospersonales.infrastructure.security.JwtTokenProvider;
+
+@RestController
+@RequestMapping("/api/auth")
+public class AuthRestController {
+
+    @Autowired
+    private UsuarioService usuarioService;
+
+    @Autowired
+    private AuthService authService;
+
+    @Autowired
+    private AuthenticationManager authenticationManager;
+
+    @Autowired
+    private JwtTokenProvider tokenProvider;
+
+    @PostMapping("/register")
+    public ResponseEntity<?> register(@RequestBody RegisterRequest request) {
+        try {
+            Usuario usuario = usuarioService.registrarUsuario(
+                    request.getUsername(),
+                    request.getPassword(),
+                    request.getEmail(),
+                    request.getNombre()
+            );
+
+            String token = authService.createSession(usuario);
+
+            AuthResponse response = new AuthResponse(
+                    usuario.getId(),
+                    usuario.getUsername(),
+                    usuario.getEmail(),
+                    usuario.getNombre(),
+                    token
+            );
+
+            return ResponseEntity.status(HttpStatus.CREATED).body(response);
+        } catch (IllegalArgumentException e) {
+            Map<String, String> error = new HashMap<>();
+            error.put("error", e.getMessage());
+            return ResponseEntity.badRequest().body(error);
+        } catch (Exception e) {
+            Map<String, String> error = new HashMap<>();
+            error.put("error", "Error al registrar usuario");
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
+        }
+    }
+
+    @PostMapping("/login")
+    public ResponseEntity<?> login(@RequestBody LoginRequest request) {
+        try {
+            Authentication authentication = authenticationManager.authenticate(
+                    new UsernamePasswordAuthenticationToken(
+                            request.getUsername(),
+                            request.getPassword()
+                    )
+            );
+
+            SecurityContextHolder.getContext().setAuthentication(authentication);
+
+            String token = tokenProvider.generateToken((org.springframework.security.core.userdetails.User) authentication.getPrincipal());
+
+            Usuario usuario = usuarioService.findByUsername(request.getUsername()).get();
+
+            AuthResponse response = new AuthResponse(
+                    usuario.getId(),
+                    usuario.getUsername(),
+                    usuario.getEmail(),
+                    usuario.getNombre(),
+                    token
+            );
+
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            Map<String, String> error = new HashMap<>();
+            error.put("error", "Error al iniciar sesión: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
+        }
+    }
+
+    @PostMapping("/logout")
+    public ResponseEntity<?> logout(@RequestHeader(value = "Authorization", required = false) String token) {
+        if (token != null) {
+            authService.removeSession(token.replace("Bearer ", ""));
+        }
+        Map<String, String> response = new HashMap<>();
+        response.put("message", "Sesión cerrada exitosamente");
+        return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/verify")
+    public ResponseEntity<?> verify(@RequestHeader(value = "Authorization", required = false) String token) {
+        // Support both session tokens (created via AuthService.createSession)
+        // and JWT tokens (generated by JwtTokenProvider during login).
+        if (token == null || token.isEmpty()) {
+            Map<String, String> error = new HashMap<>();
+            error.put("error", "Token inválido o expirado");
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(error);
+        }
+
+        String raw = token.replace("Bearer ", "");
+
+        // First try session-based tokens
+        Optional<Usuario> usuarioOpt = authService.getUserFromToken(token);
+        if (usuarioOpt.isPresent()) {
+            Usuario u = usuarioOpt.get();
+            AuthResponse response = new AuthResponse(
+                    u.getId(),
+                    u.getUsername(),
+                    u.getEmail(),
+                    u.getNombre(),
+                    raw
+            );
+            return ResponseEntity.ok(response);
+        }
+
+        // Fallback: try JWT validation
+        try {
+            if (tokenProvider.validateToken(raw)) {
+                String username = tokenProvider.getUsernameFromJWT(raw);
+                Optional<Usuario> usuarioFromJwt = usuarioService.findByUsername(username);
+                if (usuarioFromJwt.isPresent()) {
+                    Usuario u = usuarioFromJwt.get();
+                    AuthResponse response = new AuthResponse(
+                            u.getId(),
+                            u.getUsername(),
+                            u.getEmail(),
+                            u.getNombre(),
+                            raw
+                    );
+                    return ResponseEntity.ok(response);
+                }
+            }
+        } catch (Exception ex) {
+            // fallthrough to unauthorized response
+        }
+
+        Map<String, String> error = new HashMap<>();
+        error.put("error", "Token inválido o expirado");
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(error);
+    }
+
+    @GetMapping("/check-username")
+    public ResponseEntity<Map<String, Boolean>> checkUsername(@RequestParam String username) {
+        Map<String, Boolean> response = new HashMap<>();
+        response.put("exists", usuarioService.existeUsername(username));
+        return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/check-email")
+    public ResponseEntity<Map<String, Boolean>> checkEmail(@RequestParam String email) {
+        Map<String, Boolean> response = new HashMap<>();
+        response.put("exists", usuarioService.existeEmail(email));
+        return ResponseEntity.ok(response);
+    }
+}

@@ -15,6 +15,8 @@ import {
 import { useTranslation } from "../hooks/useTranslation";
 import { useAppConfig } from "../hooks/useAppConfig";
 import { formatCurrency } from "../utils";
+import { CHART_CONFIG } from "../constants";
+import { getColorForCategory } from "../utils/colors";
 import {
     PieChart,
     Pie,
@@ -29,25 +31,11 @@ import {
     Legend,
 } from "recharts";
 import {
+    BarChart3,
     Calendar,
     TrendingUp,
     PieChart as PieChartIcon,
-    BarChart3,
 } from "lucide-react";
-
-// Colores para los gráficos
-const COLORS = [
-    "#3b82f6",
-    "#ef4444",
-    "#10b981",
-    "#f59e0b",
-    "#8b5cf6",
-    "#06b6d4",
-    "#ec4899",
-    "#84cc16",
-    "#f97316",
-    "#6366f1",
-];
 
 export function Reportes() {
     const { t } = useTranslation();
@@ -67,22 +55,45 @@ export function Reportes() {
             name: item.categoria.nombre,
             gastos: Math.abs(item.totalGastos),
             ingresos: item.totalIngresos,
-            color: item.categoria.color || COLORS[index % COLORS.length],
+            // Use backend color if provided, otherwise assign deterministic color by name
+            color:
+                item.categoria.color ||
+                getColorForCategory(item.categoria.nombre, index),
             movimientos: item.movimientosCount,
         })) || [];
 
     // Preparar datos para el gráfico mensual
+    const monthNames = [
+        "Ene",
+        "Feb",
+        "Mar",
+        "Abr",
+        "May",
+        "Jun",
+        "Jul",
+        "Ago",
+        "Sep",
+        "Oct",
+        "Nov",
+        "Dic",
+    ];
+
     const mensualChartData =
-        resumenMensual?.map((item) => ({
-            mes:
-                item.mes ||
-                new Date(0, parseInt(item.mes) - 1).toLocaleString("es", {
-                    month: "short",
-                }),
-            ingresos: item.totalIngresos,
-            gastos: Math.abs(item.totalGastos),
-            balance: item.balance,
-        })) || [];
+        resumenMensual?.map((item, idx) => {
+            // item.mes can be string or number; attempt to parse to int (1-12)
+            const parsed = Number(item.mes);
+            const mesLabel =
+                Number.isFinite(parsed) && parsed >= 1 && parsed <= 12
+                    ? monthNames[parsed - 1]
+                    : item.mes || monthNames[idx % 12];
+
+            return {
+                mes: mesLabel,
+                ingresos: item.totalIngresos,
+                gastos: Math.abs(item.totalGastos),
+                balance: item.balance,
+            };
+        }) || [];
 
     // Obtener años disponibles para el selector
     const currentYear = new Date().getFullYear();
@@ -201,26 +212,37 @@ export function Reportes() {
                         ) : categoriasChartData.length > 0 ? (
                             <ResponsiveContainer width="100%" height={300}>
                                 <PieChart>
-                                    <Pie
-                                        data={categoriasChartData.filter(
-                                            (item) => item.gastos > 0
-                                        )}
-                                        cx="50%"
-                                        cy="50%"
-                                        labelLine={false}
-                                        outerRadius={80}
-                                        fill="#8884d8"
-                                        dataKey="gastos"
-                                    >
-                                        {categoriasChartData.map(
-                                            (entry, index) => (
-                                                <Cell
-                                                    key={`cell-${index}`}
-                                                    fill={entry.color}
-                                                />
-                                            )
-                                        )}
-                                    </Pie>
+                                    {/** Filter data first and map cells to filtered array to ensure colors align with slices */}
+                                    {(() => {
+                                        const pieData =
+                                            categoriasChartData.filter(
+                                                (item) => item.gastos > 0
+                                            );
+                                        return (
+                                            <>
+                                                <Pie
+                                                    data={pieData}
+                                                    cx="50%"
+                                                    cy="50%"
+                                                    labelLine={false}
+                                                    outerRadius={80}
+                                                    fill="#8884d8"
+                                                    dataKey="gastos"
+                                                >
+                                                    {pieData.map(
+                                                        (entry, index) => (
+                                                            <Cell
+                                                                key={`cell-${index}`}
+                                                                fill={
+                                                                    entry.color
+                                                                }
+                                                            />
+                                                        )
+                                                    )}
+                                                </Pie>
+                                            </>
+                                        );
+                                    })()}
                                     <Tooltip
                                         formatter={(value: number) => [
                                             formatCurrency(value),
@@ -253,9 +275,14 @@ export function Reportes() {
                             <ResponsiveContainer width="100%" height={300}>
                                 <LineChart data={mensualChartData}>
                                     <CartesianGrid strokeDasharray="3 3" />
-                                    <XAxis dataKey="mes" />
+                                    <XAxis
+                                        dataKey="mes"
+                                        interval="preserveStartEnd"
+                                    />
                                     <YAxis
-                                        tickFormatter={(value) => `$${value}`}
+                                        tickFormatter={(value) =>
+                                            formatCurrency(value)
+                                        }
                                     />
                                     <Tooltip
                                         formatter={(
@@ -274,21 +301,21 @@ export function Reportes() {
                                     <Line
                                         type="monotone"
                                         dataKey="ingresos"
-                                        stroke="#10b981"
+                                        stroke={CHART_CONFIG.COLORS.SUCCESS}
                                         name={t("movements.income")}
                                         strokeWidth={2}
                                     />
                                     <Line
                                         type="monotone"
                                         dataKey="gastos"
-                                        stroke="#ef4444"
+                                        stroke={CHART_CONFIG.COLORS.DANGER}
                                         name={t("movements.expenses")}
                                         strokeWidth={2}
                                     />
                                     <Line
                                         type="monotone"
                                         dataKey="balance"
-                                        stroke="#3b82f6"
+                                        stroke={CHART_CONFIG.COLORS.PRIMARY}
                                         name={t("dashboard.balance")}
                                         strokeWidth={2}
                                     />
@@ -312,26 +339,26 @@ export function Reportes() {
                     {categoriasChartData.length > 0 ? (
                         <div className="overflow-x-auto">
                             <table className="w-full">
-                                <thead className="bg-gray-50">
+                                <thead className="bg-muted/50">
                                     <tr>
-                                        <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">
+                                        <th className="px-4 py-2 text-left text-xs font-medium text-muted-foreground uppercase">
                                             {t("movements.category")}
                                         </th>
-                                        <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">
+                                        <th className="px-4 py-2 text-left text-xs font-medium text-muted-foreground uppercase">
                                             {t("movements.income")}
                                         </th>
-                                        <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">
+                                        <th className="px-4 py-2 text-left text-xs font-medium text-muted-foreground uppercase">
                                             {t("movements.expenses")}
                                         </th>
-                                        <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">
+                                        <th className="px-4 py-2 text-left text-xs font-medium text-muted-foreground uppercase">
                                             {t("dashboard.balance")}
                                         </th>
-                                        <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">
+                                        <th className="px-4 py-2 text-left text-xs font-medium text-muted-foreground uppercase">
                                             {t("dashboard.movements")}
                                         </th>
                                     </tr>
                                 </thead>
-                                <tbody className="divide-y divide-gray-200">
+                                <tbody className="divide-y divide-border">
                                     {categoriasChartData.map((categoria) => (
                                         <tr
                                             key={categoria.name}
@@ -349,12 +376,12 @@ export function Reportes() {
                                                     {categoria.name}
                                                 </div>
                                             </td>
-                                            <td className="px-4 py-2 text-green-600">
+                                            <td className="px-4 py-2 text-green-600 dark:text-green-400">
                                                 {formatCurrency(
                                                     categoria.ingresos
                                                 )}
                                             </td>
-                                            <td className="px-4 py-2 text-red-600">
+                                            <td className="px-4 py-2 text-red-600 dark:text-red-400">
                                                 {formatCurrency(
                                                     categoria.gastos
                                                 )}
@@ -364,8 +391,8 @@ export function Reportes() {
                                                     categoria.ingresos -
                                                         categoria.gastos >=
                                                     0
-                                                        ? "text-green-600"
-                                                        : "text-red-600"
+                                                        ? "text-green-600 dark:text-green-400"
+                                                        : "text-red-600 dark:text-red-400"
                                                 }`}
                                             >
                                                 {formatCurrency(

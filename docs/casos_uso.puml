@@ -1,0 +1,13 @@
+@startuml casos_de_uso
+left to right direction
+skinparam dpi 150
+actor Usuario
+rectangle Sistema {
+  ("Gestionar Movimientos")
+  ("Gestionar Categorías")
+  ("Ver Dashboard")
+}
+Usuario --> "Gestionar Movimientos"
+Usuario --> "Gestionar Categorías"
+Usuario --> "Ver Dashboard"
+@enduml

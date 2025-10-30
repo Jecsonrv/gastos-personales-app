@@ -103,3 +103,36 @@ export interface PaginatedResponse<T> {
     first: boolean;
     last: boolean;
 }
+
+// Auth types
+export interface Usuario {
+    id: number;
+    username: string;
+    email: string;
+    nombre: string;
+}
+
+export interface LoginRequest {
+    username: string;
+    password: string;
+}
+
+export interface RegisterRequest {
+    username: string;
+    password: string;
+    email: string;
+    nombre: string;
+}
+
+export interface AuthResponse {
+    id: number;
+    username: string;
+    email: string;
+    nombre: string;
+    token: string;
+}
+
+export interface ChangePasswordRequest {
+    oldPassword: string;
+    newPassword: string;
+}

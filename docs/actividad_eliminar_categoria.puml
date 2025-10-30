@@ -1,0 +1,16 @@
+@startuml actividad_eliminar_categoria
+start
+:Solicitar eliminación de categoría;
+if (Categoria existe?) then (sí)
+  if (Categoria.getCantidadMovimientos() == 0) then (sí)
+    :Eliminar categoría;
+    stop
+  else (no)
+    :Mostrar error "tiene movimientos";
+    stop
+  endif
+else (no)
+  :Mostrar error "no encontrada";
+  stop
+endif
+@enduml

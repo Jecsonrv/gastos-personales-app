@@ -5,11 +5,12 @@ export const API_ENDPOINTS = {
     MOVIMIENTOS: "/movimientos",
     CATEGORIAS: "/categorias",
     REPORTES: "/reportes",
+    USUARIO: "/usuario",
 } as const;
 
 // Configuración de la aplicación
 export const APP_CONFIG = {
-    NAME: "Gestor de Gastos Personales",
+    NAME: "Fine",
     VERSION: "2.0.0",
     PAGINATION_SIZE: 10,
     DATE_FORMAT: "dd/MM/yyyy",

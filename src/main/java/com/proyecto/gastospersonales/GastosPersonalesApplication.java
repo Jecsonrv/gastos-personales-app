@@ -1,6 +1,5 @@
 package com.proyecto.gastospersonales;
 
-import com.proyecto.gastospersonales.interfaz.console.ConsoleApplication;
 import com.proyecto.gastospersonales.domain.service.CategoriaService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
@@ -23,9 +22,6 @@ import org.springframework.context.ConfigurableApplicationContext;
 @SpringBootApplication
 public class GastosPersonalesApplication implements CommandLineRunner {
 
-    @Autowired
-    private ConsoleApplication consoleApplication;
-    
     @Autowired
     private CategoriaService categoriaService;
     
@@ -58,26 +54,17 @@ public class GastosPersonalesApplication implements CommandLineRunner {
         boolean modoConsola = "consola".equalsIgnoreCase(args.length > 0 ? args[0] : "web");
         
         if (modoConsola) {
-            try {
-                System.out.println("Iniciando interfaz de consola...");
-                // Ejecutar interfaz de consola
-                consoleApplication.ejecutar();
-            } catch (Exception e) {
-                System.err.println("❌ Error al ejecutar la aplicación de consola: " + e.getMessage());
-                e.printStackTrace();
-            } finally {
-                // Cerrar la aplicación cuando se termine la interacción por consola
-                cerrarAplicacion();
-            }
-        } else {
-            // Modo Web - La aplicación sigue ejecutándose como servidor
-            System.out.println("Servidor web iniciado correctamente");
-            System.out.println("Accede desde: http://localhost:8080");
-            System.out.println(" Para detener el servidor, presiona Ctrl+C");
-            System.out.println("Endpoints disponibles:");
-            System.out.println("   - /api/movimientos (próximamente)");
-            System.out.println("   - /api/categorias (próximamente)");
+            System.out.println("El modo consola ha sido deshabilitado temporalmente.");
+            System.out.println("Iniciando en modo WEB por defecto.");
         }
+
+        // Modo Web - La aplicación sigue ejecutándose como servidor
+        System.out.println("Servidor web iniciado correctamente");
+        System.out.println("Accede desde: http://localhost:8080");
+        System.out.println(" Para detener el servidor, presiona Ctrl+C");
+        System.out.println("Endpoints disponibles:");
+        System.out.println("   - /api/movimientos (próximamente)");
+        System.out.println("   - /api/categorias (próximamente)");
     }
     
     /**

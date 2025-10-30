@@ -13,6 +13,8 @@ import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.NotBlank;
@@ -41,7 +43,13 @@ public class Categoria {
     
     @Column(name = "es_predefinida", nullable = false)
     private Boolean esPredefinida = false;
-    
+
+    // Relación con el usuario propietario (null para categorías predefinidas)
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "usuario_id")
+    @JsonBackReference
+    private Usuario usuario;
+
     // Relación uno a muchos con movimientos
     @OneToMany(mappedBy = "categoria", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     @JsonBackReference
@@ -94,7 +102,15 @@ public class Categoria {
     public void setEsPredefinida(Boolean esPredefinida) {
         this.esPredefinida = esPredefinida;
     }
-    
+
+    public Usuario getUsuario() {
+        return usuario;
+    }
+
+    public void setUsuario(Usuario usuario) {
+        this.usuario = usuario;
+    }
+
     public List<Movimiento> getMovimientos() {
         return movimientos;
     }

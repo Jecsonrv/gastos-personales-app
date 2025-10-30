@@ -1,14 +1,34 @@
 package com.proyecto.gastospersonales.interfaz.web;
 
-import com.proyecto.gastospersonales.domain.service.CategoriaService;
-import com.proyecto.gastospersonales.domain.model.Categoria;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 
-import java.util.List;
-import java.util.Optional;
+import com.proyecto.gastospersonales.domain.model.Categoria;
+import com.proyecto.gastospersonales.domain.service.CategoriaService;
+import com.proyecto.gastospersonales.domain.service.UsuarioService;
+
+import jakarta.servlet.http.HttpServletRequest;
 
 /**
  * Controlador REST para la gestión de categorías
@@ -18,16 +38,33 @@ import java.util.Optional;
 @RequestMapping("/api/categorias")
 @CrossOrigin(origins = {"http://localhost:3000", "http://localhost:5173"}) // React/Vite dev servers
 public class CategoriaRestController {
+    private static final Logger logger = LoggerFactory.getLogger(CategoriaRestController.class);
     
     @Autowired
     private CategoriaService categoriaService;
+
+    @Autowired
+    private UsuarioService usuarioService;
+
+    private Optional<com.proyecto.gastospersonales.domain.model.Usuario> getAuthenticatedUsuario(UserDetails userDetails) {
+        if (userDetails == null) {
+            return Optional.empty();
+        }
+        return usuarioService.findByUsername(userDetails.getUsername());
+    }
     
     /**
      * Obtiene todas las categorías
      */
     @GetMapping
-    public ResponseEntity<List<Categoria>> obtenerTodasLasCategorias() {
+    public ResponseEntity<List<Categoria>> obtenerTodasLasCategorias(HttpServletRequest request) {
         try {
+            // Debug: log incoming Authorization header and security context
+
+            String authHeader = request.getHeader("Authorization");
+            logger.info("CategoriaRestController: Authorization header='{}' for request {} {}", authHeader, request.getMethod(), request.getRequestURI());
+            logger.info("CategoriaRestController: SecurityContext authentication={}", SecurityContextHolder.getContext().getAuthentication());
+
             List<Categoria> categorias = categoriaService.obtenerTodasLasCategorias();
             return ResponseEntity.ok(categorias);
         } catch (Exception e) {
@@ -105,16 +142,44 @@ public class CategoriaRestController {
      * Crea una nueva categoría
      */
     @PostMapping
-    public ResponseEntity<Categoria> crearCategoria(
-            @RequestParam String nombre,
-            @RequestParam(required = false) String descripcion) {
+    public ResponseEntity<Object> crearCategoria(@RequestBody CategoriaRequest request) {
         try {
-            Categoria nuevaCategoria = categoriaService.crearCategoria(nombre, descripcion);
+            Categoria nuevaCategoria = categoriaService.crearCategoria(
+                request.getNombre(),
+                request.getDescripcion()
+            );
             return ResponseEntity.status(HttpStatus.CREATED).body(nuevaCategoria);
         } catch (IllegalArgumentException e) {
-            return ResponseEntity.badRequest().build();
+            // Return the validation message to client for better UX/debugging
+            Map<String, String> error = new HashMap<>();
+            error.put("error", e.getMessage());
+            return ResponseEntity.badRequest().body(error);
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
+
+    /**
+     * Clase interna para solicitud de creación de categoría
+     */
+    public static class CategoriaRequest {
+        private String nombre;
+        private String descripcion;
+
+        public String getNombre() {
+            return nombre;
+        }
+
+        public void setNombre(String nombre) {
+            this.nombre = nombre;
+        }
+
+        public String getDescripcion() {
+            return descripcion;
+        }
+
+        public void setDescripcion(String descripcion) {
+            this.descripcion = descripcion;
         }
     }
     
@@ -179,14 +244,18 @@ public class CategoriaRestController {
      * Elimina una categoría
      */
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> eliminarCategoria(@PathVariable Long id) {
-        try {
-            categoriaService.eliminarCategoria(id);
-            return ResponseEntity.noContent().build();
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.badRequest().build();
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
-        }
+    public ResponseEntity<?> eliminarCategoria(@PathVariable Long id, @AuthenticationPrincipal UserDetails userDetails) {
+        return getAuthenticatedUsuario(userDetails)
+                .map(usuario -> {
+                    try {
+                        categoriaService.eliminarCategoria(id, usuario.getId());
+                        return ResponseEntity.noContent().build();
+                    } catch (IllegalArgumentException e) {
+                        return ResponseEntity.badRequest().build();
+                    } catch (Exception e) {
+                        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+                    }
+                })
+                .orElse(ResponseEntity.status(HttpStatus.UNAUTHORIZED).build());
     }
 }

@@ -3,6 +3,7 @@ package com.proyecto.gastospersonales.infrastructure.repository;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -23,117 +24,123 @@ public interface MovimientoRepositoryInterface extends JpaRepository<Movimiento,
     /**
      * Consultas por tipo de movimiento
      */
-    List<Movimiento> findByTipoOrderByFechaDesc(TipoMovimiento tipo);
+    List<Movimiento> findByTipoAndUsuarioIdOrderByFechaDesc(TipoMovimiento tipo, Long userId);
     
-    List<Movimiento> findByTipoAndFechaBetweenOrderByFechaDesc(
-            TipoMovimiento tipo, LocalDateTime fechaInicio, LocalDateTime fechaFin);
+    List<Movimiento> findByTipoAndFechaBetweenAndUsuarioIdOrderByFechaDesc(
+            TipoMovimiento tipo, LocalDateTime fechaInicio, LocalDateTime fechaFin, Long userId);
     
     /**
      * Consultas por categoría
      */
-    List<Movimiento> findByCategoriaOrderByFechaDesc(Categoria categoria);
+    List<Movimiento> findByCategoriaAndUsuarioIdOrderByFechaDesc(Categoria categoria, Long userId);
     
-    List<Movimiento> findByCategoriaAndTipoOrderByFechaDesc(Categoria categoria, TipoMovimiento tipo);
+    List<Movimiento> findByCategoriaAndTipoAndUsuarioIdOrderByFechaDesc(Categoria categoria, TipoMovimiento tipo, Long userId);
     
     /**
      * Consultas por rango de fechas
      */
-    List<Movimiento> findByFechaBetweenOrderByFechaDesc(LocalDateTime fechaInicio, LocalDateTime fechaFin);
+    List<Movimiento> findByFechaBetweenAndUsuarioIdOrderByFechaDesc(LocalDateTime fechaInicio, LocalDateTime fechaFin, Long userId);
     
-    List<Movimiento> findByFechaAfterOrderByFechaDesc(LocalDateTime fecha);
+    List<Movimiento> findByFechaAfterAndUsuarioIdOrderByFechaDesc(LocalDateTime fecha, Long userId);
     
     /**
      * Consultas por descripción
      */
-    List<Movimiento> findByDescripcionContainingIgnoreCaseOrderByFechaDesc(String descripcion);
+    List<Movimiento> findByDescripcionContainingIgnoreCaseAndUsuarioIdOrderByFechaDesc(String descripcion, Long userId);
     
     /**
      * Consultas de suma y agregación
      */
-    @Query("SELECT COALESCE(SUM(m.monto), 0) FROM Movimiento m WHERE m.tipo = :tipo")
-    BigDecimal sumMontoByTipo(@Param("tipo") TipoMovimiento tipo);
+    @Query("SELECT COALESCE(SUM(m.monto), 0) FROM Movimiento m WHERE m.tipo = :tipo AND m.usuario.id = :userId")
+    BigDecimal sumMontoByTipoAndUsuarioId(@Param("tipo") TipoMovimiento tipo, @Param("userId") Long userId);
     
-    @Query("SELECT COALESCE(SUM(m.monto), 0) FROM Movimiento m WHERE m.tipo = :tipo AND m.fecha BETWEEN :fechaInicio AND :fechaFin")
-    BigDecimal sumMontoByTipoAndFechaBetween(
+    @Query("SELECT COALESCE(SUM(m.monto), 0) FROM Movimiento m WHERE m.tipo = :tipo AND m.fecha BETWEEN :fechaInicio AND :fechaFin AND m.usuario.id = :userId")
+    BigDecimal sumMontoByTipoAndFechaBetweenAndUsuarioId(
             @Param("tipo") TipoMovimiento tipo, 
             @Param("fechaInicio") LocalDateTime fechaInicio, 
-            @Param("fechaFin") LocalDateTime fechaFin);
+            @Param("fechaFin") LocalDateTime fechaFin,
+            @Param("userId") Long userId);
     
-    @Query("SELECT COALESCE(SUM(m.monto), 0) FROM Movimiento m WHERE m.categoria = :categoria AND m.tipo = :tipo")
-    BigDecimal sumMontoByCategoriaAndTipo(@Param("categoria") Categoria categoria, @Param("tipo") TipoMovimiento tipo);
+    @Query("SELECT COALESCE(SUM(m.monto), 0) FROM Movimiento m WHERE m.categoria = :categoria AND m.tipo = :tipo AND m.usuario.id = :userId")
+    BigDecimal sumMontoByCategoriaAndTipo(@Param("categoria") Categoria categoria, @Param("tipo") TipoMovimiento tipo, @Param("userId") Long userId);
     
     /**
      * Consulta para balance total
      */
     @Query("SELECT COALESCE(" +
-           "(SELECT SUM(m1.monto) FROM Movimiento m1 WHERE m1.tipo = 'INGRESO') - " +
-           "(SELECT SUM(m2.monto) FROM Movimiento m2 WHERE m2.tipo = 'GASTO'), 0)")
-    BigDecimal calcularBalanceTotal();
+           "(SELECT SUM(m1.monto) FROM Movimiento m1 WHERE m1.tipo = 'INGRESO' AND m1.usuario.id = :userId) - " +
+           "(SELECT SUM(m2.monto) FROM Movimiento m2 WHERE m2.tipo = 'GASTO' AND m2.usuario.id = :userId), 0)")
+    BigDecimal calcularBalanceTotalByUsuarioId(@Param("userId") Long userId);
     
     /**
      * Consulta para balance mensual
      */
     @Query("SELECT COALESCE(" +
-           "(SELECT SUM(m1.monto) FROM Movimiento m1 WHERE m1.tipo = 'INGRESO' AND m1.fecha BETWEEN :fechaInicio AND :fechaFin) - " +
-           "(SELECT SUM(m2.monto) FROM Movimiento m2 WHERE m2.tipo = 'GASTO' AND m2.fecha BETWEEN :fechaInicio AND :fechaFin), 0)")
-    BigDecimal calcularBalancePorPeriodo(@Param("fechaInicio") LocalDateTime fechaInicio, @Param("fechaFin") LocalDateTime fechaFin);
+           "(SELECT SUM(m1.monto) FROM Movimiento m1 WHERE m1.tipo = 'INGRESO' AND m1.fecha BETWEEN :fechaInicio AND :fechaFin AND m1.usuario.id = :userId) - " +
+           "(SELECT SUM(m2.monto) FROM Movimiento m2 WHERE m2.tipo = 'GASTO' AND m2.fecha BETWEEN :fechaInicio AND :fechaFin AND m2.usuario.id = :userId), 0)")
+    BigDecimal calcularBalancePorPeriodo(@Param("fechaInicio") LocalDateTime fechaInicio, @Param("fechaFin") LocalDateTime fechaFin, @Param("userId") Long userId);
     
     /**
      * Consultas para reportes por categoría
      */
     @Query("SELECT m.categoria, SUM(m.monto) as total " +
            "FROM Movimiento m " +
-           "WHERE m.tipo = :tipo " +
+           "WHERE m.tipo = :tipo AND m.usuario.id = :userId " +
            "GROUP BY m.categoria " +
            "ORDER BY total DESC")
-    List<Object[]> sumMontoByTipoGroupByCategoria(@Param("tipo") TipoMovimiento tipo);
+    List<Object[]> sumMontoByTipoGroupByCategoria(@Param("tipo") TipoMovimiento tipo, @Param("userId") Long userId);
     
     @Query("SELECT m.categoria, SUM(m.monto) as total " +
            "FROM Movimiento m " +
-           "WHERE m.tipo = :tipo AND m.fecha BETWEEN :fechaInicio AND :fechaFin " +
+           "WHERE m.tipo = :tipo AND m.fecha BETWEEN :fechaInicio AND :fechaFin AND m.usuario.id = :userId " +
            "GROUP BY m.categoria " +
            "ORDER BY total DESC")
-    List<Object[]> sumMontoByTipoAndFechaGroupByCategoria(
+    List<Object[]> sumMontoByTipoAndFechaBetweenAndUsuarioIdGroupByCategoria(
             @Param("tipo") TipoMovimiento tipo, 
             @Param("fechaInicio") LocalDateTime fechaInicio, 
-            @Param("fechaFin") LocalDateTime fechaFin);
+            @Param("fechaFin") LocalDateTime fechaFin,
+            @Param("userId") Long userId);
     
     /**
      * Consultas estadísticas
      */
-    @Query("SELECT AVG(m.monto) FROM Movimiento m WHERE m.tipo = :tipo")
-    BigDecimal promedioMontoByTipo(@Param("tipo") TipoMovimiento tipo);
+    @Query("SELECT AVG(m.monto) FROM Movimiento m WHERE m.tipo = :tipo AND m.usuario.id = :userId")
+    BigDecimal promedioMontoByTipo(@Param("tipo") TipoMovimiento tipo, @Param("userId") Long userId);
     
-    @Query("SELECT MAX(m.monto) FROM Movimiento m WHERE m.tipo = :tipo")
-    BigDecimal maxMontoByTipo(@Param("tipo") TipoMovimiento tipo);
+    @Query("SELECT MAX(m.monto) FROM Movimiento m WHERE m.tipo = :tipo AND m.usuario.id = :userId")
+    BigDecimal maxMontoByTipo(@Param("tipo") TipoMovimiento tipo, @Param("userId") Long userId);
     
-    @Query("SELECT MIN(m.monto) FROM Movimiento m WHERE m.tipo = :tipo")
-    BigDecimal minMontoByTipo(@Param("tipo") TipoMovimiento tipo);
+    @Query("SELECT MIN(m.monto) FROM Movimiento m WHERE m.tipo = :tipo AND m.usuario.id = :userId")
+    BigDecimal minMontoByTipo(@Param("tipo") TipoMovimiento tipo, @Param("userId") Long userId);
     
-    @Query("SELECT COUNT(m) FROM Movimiento m WHERE m.tipo = :tipo")
-    long countByTipo(@Param("tipo") TipoMovimiento tipo);
+    @Query("SELECT COUNT(m) FROM Movimiento m WHERE m.tipo = :tipo AND m.usuario.id = :userId")
+    long countByTipo(@Param("tipo") TipoMovimiento tipo, @Param("userId") Long userId);
     
     /**
      * Últimos movimientos
      */
-    List<Movimiento> findTop10ByOrderByFechaDesc();
+    List<Movimiento> findTop10ByUsuarioIdOrderByFechaDesc(Long userId);
     
-    List<Movimiento> findTop5ByTipoOrderByMontoDesc(TipoMovimiento tipo);
+    List<Movimiento> findTop5ByTipoAndUsuarioIdOrderByMontoDesc(TipoMovimiento tipo, Long userId);
     
     /**
      * Movimientos del mes actual
      */
-    @Query("SELECT m FROM Movimiento m WHERE YEAR(m.fecha) = YEAR(CURRENT_DATE) AND MONTH(m.fecha) = MONTH(CURRENT_DATE) ORDER BY m.fecha DESC")
-    List<Movimiento> findMovimientosDelMesActual();
+    @Query("SELECT m FROM Movimiento m WHERE YEAR(m.fecha) = YEAR(CURRENT_DATE) AND MONTH(m.fecha) = MONTH(CURRENT_DATE) AND m.usuario.id = :userId ORDER BY m.fecha DESC")
+    List<Movimiento> findMovimientosDelMesActualByUsuarioId(@Param("userId") Long userId);
     
     /**
      * Movimientos del año actual
      */
-    @Query("SELECT m FROM Movimiento m WHERE YEAR(m.fecha) = YEAR(CURRENT_DATE) ORDER BY m.fecha DESC")
-    List<Movimiento> findMovimientosDelAnioActual();
+    @Query("SELECT m FROM Movimiento m WHERE YEAR(m.fecha) = YEAR(CURRENT_DATE) AND m.usuario.id = :userId ORDER BY m.fecha DESC")
+    List<Movimiento> findMovimientosDelAnioActualByUsuarioId(@Param("userId") Long userId);
     
     /**
      * Consulta general ordenada por fecha
      */
-    List<Movimiento> findAllByOrderByFechaDesc();
+    List<Movimiento> findAllByUsuarioIdOrderByFechaDesc(Long userId);
+
+    Optional<Movimiento> findByIdAndUsuarioId(Long id, Long userId);
+
+    boolean existsByIdAndUsuarioId(Long id, Long userId);
 }

@@ -13,6 +13,8 @@ import type {
     ResumenMensual,
     FiltroMovimientos,
     TipoMovimiento,
+    Usuario,
+    ChangePasswordRequest,
 } from "../types";
 
 // Types for API responses
@@ -177,32 +179,66 @@ class ApiService {
     }
 
     private setupInterceptors(): void {
-        // Request interceptor - keep minimal logging
         this.client.interceptors.request.use(
             (config) => {
-                // silent by default to avoid noisy logs in production
+                const token = localStorage.getItem("token");
+                // Debug: mostrar si hay token y la URL solicitada
+                try {
+                    console.debug("API Request ->", {
+                        method: config.method,
+                        url: config.url,
+                        hasToken: !!token,
+                    });
+                } catch {
+                    // ignore
+                }
+
+                if (token) {
+                    config.headers.Authorization = `Bearer ${token}`;
+                }
                 return config;
             },
             (error) => {
-                console.error("❌ Request Error:", error);
+                console.error("Request Error:", error);
                 return Promise.reject(
                     new ApiError("Request failed", undefined, error)
                 );
             }
         );
 
-        // Response interceptor - avoid verbose response logs
         this.client.interceptors.response.use(
             (response) => {
                 return response;
             },
             (error) => {
-                console.error("❌ Response Error:", error);
+                console.error("Response Error:", error);
                 const status = error.response?.status;
+                const serverMessage =
+                    error.response?.data?.error ||
+                    error.response?.data?.message;
                 const message =
-                    error.response?.data?.message ||
-                    error.message ||
-                    "API request failed";
+                    serverMessage || error.message || "API request failed";
+
+                // Handle unauthorized globally: clear token and redirect to login
+                if (status === 401) {
+                    try {
+                        console.warn(
+                            "API: 401 Unauthorized - clearing local token and redirecting to login"
+                        );
+                        localStorage.removeItem("token");
+                        localStorage.removeItem("user");
+                        // Use full reload to ensure auth state resets
+                        window.location.href = "/login";
+                    } catch {
+                        // ignore
+                    }
+                }
+
+                // For forbidden, log the message (UI components can show toasts)
+                if (status === 403) {
+                    console.warn("API: 403 Forbidden ->", message);
+                }
+
                 return Promise.reject(new ApiError(message, status, error));
             }
         );
@@ -254,6 +290,7 @@ class ApiService {
             descripcion: movimiento.descripcion.trim(),
             monto: movimiento.monto,
             categoriaId: movimiento.categoriaId,
+            fecha: movimiento.fechaMovimiento,
         });
 
         try {
@@ -282,6 +319,8 @@ class ApiService {
             monto: movimiento.monto,
             categoriaId: (movimiento as unknown as Record<string, unknown>)
                 .categoriaId,
+            fecha: movimiento.fechaMovimiento,
+            tipo: (movimiento as unknown as Record<string, unknown>).tipo,
         });
 
         try {
@@ -427,6 +466,13 @@ class ApiService {
             payload.descripcion = categoria.descripcion.trim();
         }
 
+        // Debug: log payload antes de enviar la petición
+        try {
+            console.debug("API createCategoria payload:", payload);
+        } catch {
+            // ignore
+        }
+
         try {
             const response: AxiosResponse<Categoria> = await this.client.post(
                 API_ENDPOINTS.CATEGORIAS,
@@ -458,46 +504,13 @@ class ApiService {
         });
 
         try {
-            console.debug("[api] updateCategoria -> sending PUT", {
-                url: `${API_ENDPOINTS.CATEGORIAS}/${categoria.id}`,
-                params,
-            });
             const response: AxiosResponse<Categoria> = await this.client.put(
                 `${API_ENDPOINTS.CATEGORIAS}/${categoria.id}`,
                 undefined,
                 { params }
             );
-            console.debug("[api] updateCategoria -> response", {
-                status: response.status,
-                data: response.data,
-            });
             return response.data;
         } catch (error) {
-            // log detailed error info for debugging in devtools
-            try {
-                if (error instanceof ApiError) {
-                    type AxiosErrorLike = {
-                        response?: { status?: number; data?: unknown };
-                        config?: unknown;
-                    };
-                    const orig =
-                        error.originalError as unknown as AxiosErrorLike;
-                    console.error("[api] updateCategoria -> ApiError", {
-                        message: error.message,
-                        apiErrorStatus: error.status,
-                        originalResponseStatus: orig?.response?.status,
-                        originalResponseData: orig?.response?.data,
-                        originalConfig: orig?.config,
-                    });
-                } else {
-                    console.error("[api] updateCategoria -> error", error);
-                }
-            } catch {
-                console.error(
-                    "[api] updateCategoria -> error (no details)",
-                    error
-                );
-            }
             throw error instanceof ApiError
                 ? error
                 : new ApiError("Failed to update categoria", undefined, error);
@@ -709,6 +722,63 @@ class ApiService {
                       undefined,
                       error
                   );
+        }
+    }
+
+    // USER PROFILE METHODS
+
+    /**
+     * Get user profile
+     */
+    async getProfile(): Promise<Usuario> {
+        console.log("API: getProfile - Starting API call");
+        try {
+            const response: AxiosResponse<Usuario> = await this.client.get(
+                `${API_ENDPOINTS.USUARIO}/me`
+            );
+            console.log("API: getProfile - API call finished");
+            return response.data;
+        } catch (error) {
+            throw error instanceof ApiError
+                ? error
+                : new ApiError("Failed to get user profile", undefined, error);
+        }
+    }
+
+    /**
+     * Update user profile
+     */
+    async updateProfile(profileData: Partial<Usuario>): Promise<Usuario> {
+        try {
+            const response: AxiosResponse<Usuario> = await this.client.put(
+                `${API_ENDPOINTS.USUARIO}/me`,
+                profileData
+            );
+            return response.data;
+        } catch (error) {
+            throw error instanceof ApiError
+                ? error
+                : new ApiError(
+                      "Failed to update user profile",
+                      undefined,
+                      error
+                  );
+        }
+    }
+
+    /**
+     * Change user password
+     */
+    async changePassword(passwordData: ChangePasswordRequest): Promise<void> {
+        try {
+            await this.client.put(
+                `${API_ENDPOINTS.USUARIO}/me/password`,
+                passwordData
+            );
+        } catch (error) {
+            throw error instanceof ApiError
+                ? error
+                : new ApiError("Failed to change password", undefined, error);
         }
     }
 }
